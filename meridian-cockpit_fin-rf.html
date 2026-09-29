@@ -1,0 +1,725 @@
+<title>Meridian Cockpit</title>
+<style>
+:root{--bg:#F4F6F8;--surface:#FAFBFC;--surface2:#E8EDF2;--line:#D5DCE5;--text:#1B2A4A;--muted:#5F6E85;--navy:#1B2A4A;--steel:#3D5A80;--blue:#2E86AB;--bluelt:#D4EAF3;--mist:#E8EDF2;--accent:#C8963E;--accent-dim:rgba(200,150,62,.16);--good:#2E7D4F;--bad:#B5413A;--warn:#C8963E;color-scheme:light}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100%}
+nav{position:sticky;top:0;height:100vh;background:var(--navy);border-right:1px solid var(--navy);padding:24px 16px;display:flex;flex-direction:column;gap:6px}
+nav .brand{font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;letter-spacing:.18em;color:#FFFFFF;line-height:1;margin-bottom:4px}
+nav .brandsub{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#A9B7CC;margin-bottom:22px}
+nav h1{font-family:Georgia,'Times New Roman',serif;font-size:17px;margin:0 0 14px;font-weight:400;color:var(--accent);letter-spacing:0}
+nav a.item{display:block;padding:9px 12px;border-radius:4px;color:#C9D3E0;text-decoration:none;font-weight:500;border-left:2px solid transparent}
+nav a.item.gap{margin-top:calc(2 * 2.45em)}
+nav a.item:hover{color:#FFFFFF;background:rgba(255,255,255,.08)}
+nav a.item.active{color:#FFFFFF;background:rgba(255,255,255,.10);border-left-color:var(--accent)}
+nav .spacer{flex:1}
+nav .period{font-size:12px;color:#A9B7CC;line-height:1.5}
+nav .period b{color:#FFFFFF;display:block;font-size:13px}
+.upload{margin-top:10px}
+.upload label{display:block;text-align:center;padding:9px 12px;border:1px dashed #5F6E85;border-radius:4px;color:var(--accent);cursor:pointer;font-weight:500;font-size:13px}
+.upload label:hover{background:rgba(255,255,255,.08);border-color:var(--accent)}
+.upload input{position:absolute;width:1px;height:1px;opacity:0}
+.upload .msg{font-size:11px;color:#A9B7CC;margin-top:6px;min-height:14px}
+.upload .reset{display:block;font-size:11px;color:#A9B7CC;text-decoration:underline;margin-top:4px}
+.upload .reset:hover{color:#FFFFFF}
+.upload .msg.err{color:#F0A8A2}
+main{padding:28px 32px 60px;max-width:1280px;width:100%}
+section{padding-top:8px;margin-bottom:44px;scroll-margin-top:12px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.sec-head h2{font-family:Georgia,'Times New Roman',serif;font-size:24px;margin:0;font-weight:700;color:var(--navy)}
+.sec-head .sub{color:var(--muted);font-size:13px}
+.commentary{color:var(--text);font-size:15px;line-height:1.5;margin:0 0 18px;padding:12px 14px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 4px 4px 0;max-width:80ch}
+.alert{display:grid;grid-template-columns:1fr auto;gap:8px 24px;align-items:start;margin:0 0 14px;padding:14px 18px;background:#FFFFFF;border:1px solid var(--line);border-left:5px solid var(--bad);border-radius:4px}
+.alert .e{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--bad);grid-column:1/-1}
+.alert h3{font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:700;color:var(--navy);margin:0 0 4px}
+.alert p{margin:0;font-size:14px;line-height:1.5;max-width:80ch}
+.alert .x{text-align:right;min-width:150px}
+.alert .x .n{font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:var(--bad);line-height:1.1}
+.alert .x .l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.alert .act{grid-column:1/-1;font-size:13px;color:var(--navy);border-top:1px solid var(--line);padding-top:8px}
+.alert .act b{color:var(--bad)}
+.alert .constraint{grid-column:1/-1;font-size:13px;color:var(--navy);background:var(--surface2);border-radius:3px;padding:8px 12px;margin-bottom:4px}
+.alert .constraint .cl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);margin-right:8px}
+.toc{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:3px;padding:1px 5px;margin-right:3px;vertical-align:1px;border:1px solid}
+.toc.size{color:var(--bad);border-color:var(--bad);background:#FBEBE9}
+.toc.exploit{color:var(--good);border-color:var(--good);background:#E8F4EC}
+.toc.sub{color:var(--steel);border-color:var(--steel);background:var(--bluelt)}
+.toc.elevate{color:var(--navy);border-color:var(--navy);background:#FFFFFF}
+.toc.neutral{color:var(--muted);border-color:var(--line);background:#FFFFFF}
+.alert .watch{grid-column:1/-1;border-top:1px solid var(--line);padding-top:8px}
+.alert .watch .wl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.alert .watch table{border-collapse:collapse;width:100%;font-size:13px}
+.alert .watch td{padding:3px 8px 3px 0;vertical-align:top}
+.alert .watch td.i{width:18px;color:var(--muted);font-weight:700}
+.alert .watch td.x{text-align:right;white-space:nowrap;font-weight:700;color:var(--navy);width:90px}
+.alert .watch td.o{text-align:right;white-space:nowrap;color:var(--muted);width:90px;padding-right:0}
+.alert .watch a{color:var(--navy);text-decoration:none;border-bottom:1px dotted var(--steel)}
+.alert .watch a:hover{color:var(--steel)}
+@media (max-width:800px){.alert{grid-template-columns:1fr}.alert .x{text-align:left}.alert .watch td.o{display:none}}
+.brief{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:0 0 18px;background:#FFFFFF;border:1px solid var(--line);border-top:3px solid var(--navy);border-radius:4px}
+.brief>div{padding:14px 16px;border-left:1px solid var(--line);min-width:0}
+.brief>div:first-child{border-left:0}
+.brief .e{font-family:Georgia,'Times New Roman',serif;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.brief .e small{font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:2px}
+.brief p{margin:0;font-size:14px;line-height:1.5;color:var(--text)}
+.brief p b{color:var(--navy)}
+@media (max-width:800px){.brief{grid-template-columns:1fr}.brief>div{border-left:0;border-top:1px solid var(--line)}.brief>div:first-child{border-top:0}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+#ovKpis,#prKpis,#caKpis,#cuKpis{grid-template-columns:repeat(7,1fr)}
+@media (max-width:1100px){#ovKpis,#prKpis,#caKpis,#cuKpis{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:800px){#ovKpis,#prKpis,#caKpis,#cuKpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--steel);border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.kpi .l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:var(--navy);line-height:1.15;white-space:nowrap}
+.kpi .d{font-size:12px;color:var(--muted)}
+.kpi .d b{font-weight:600}
+.kpi.hero{grid-column:span 2;border-top:3px solid var(--accent);background:#FFFFFF;box-shadow:0 1px 0 var(--accent-dim)}
+.kpi.hero .v{font-size:38px;color:var(--navy)}
+.kpi.hero .l{color:var(--navy)}
+.kpi .tag{display:inline-block;align-self:flex-start;margin-top:6px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--navy);background:#F5EDD8;border:1px solid var(--accent);border-radius:3px;padding:2px 7px}
+.kpi .tag.warn{background:#FBEBE9;border-color:var(--bad);color:var(--bad)}
+.kpi .tr{font-size:12px;color:var(--steel);font-weight:600;margin-top:auto;padding-top:6px}
+.kpi .why.dim{color:var(--muted);font-style:italic}
+.kpibadge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--steel);border:1px solid var(--steel);border-radius:3px;padding:0 4px;margin-left:4px;vertical-align:1px;line-height:1.5}
+.kpi .v3{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-top:2px}
+.kpi .v3 .k{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--steel);align-self:center}
+.kpi .v3 i{font-style:normal;color:var(--muted)}
+.kpi .v3 b{font-weight:600}
+table.sc{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+table.sc th,table.sc td{padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}
+table.sc th{color:var(--muted);font-weight:500;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+table.sc th:first-child,table.sc td:first-child,table.sc th:last-child,table.sc td:last-child{text-align:left}
+table.sc td.src{text-align:left;white-space:normal;color:var(--muted);font-size:11.5px;min-width:200px}
+table.sc td.b{font-weight:700;color:var(--navy)}
+table.sc td small{color:var(--muted);font-size:11px}
+table.sc .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:0}
+table.sc .dot.good{background:var(--good)}table.sc .dot.warn{background:var(--warn)}table.sc .dot.bad{background:var(--bad)}table.sc .dot.grey{background:var(--light)}
+.kpi .why{font-size:12px;color:var(--muted);margin-top:2px}
+.up{color:var(--good)}.down{color:var(--bad)}.flat{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px}
+.card{background:#FFFFFF;border:1px solid var(--line);border-radius:4px;padding:14px 16px 10px;min-width:0}
+.card h3{font-family:Georgia,'Times New Roman',serif;margin:0 0 2px;font-size:15px;font-weight:700;color:var(--steel)}
+.card .note{font-size:12px;color:var(--muted);margin-bottom:8px}
+.card svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:6px 0 2px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+table.pl{width:100%;border-collapse:collapse;font-size:13px}
+table.pl th,table.pl td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+table.pl th{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+table.pl td:first-child,table.pl th:first-child{text-align:left}
+table.pl tr.sub td{color:var(--muted);padding-left:20px}
+table.pl tr.total td{font-weight:700;border-top:1px solid var(--muted);background:var(--surface2)}
+table.pl tr.key td{font-weight:700;color:var(--steel)}
+.tblwrap{overflow-x:auto}
+.neg{color:var(--bad)}
+svg text{font-family:inherit;font-size:10px;fill:var(--muted)}
+svg .grid{stroke:var(--line);stroke-width:1}
+svg .axis{stroke:var(--muted);stroke-width:1}
+.foot{color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;margin-top:20px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:800px){.kpi.hero{grid-column:span 1}.kpi.hero .v{font-size:30px}.app{grid-template-columns:1fr}nav{position:sticky;border-right:0;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px 16px;gap:4px;z-index:5}nav h1,nav .brandsub,nav .spacer,nav .period{display:none}nav .brand{font-size:16px;margin:0 14px 0 0;letter-spacing:.14em}nav a.item{padding:6px 10px;font-size:13px;border-left:0}nav a.item.gap{margin-top:0}nav a.item.active{border-left:0}.upload{margin:0 0 0 auto}.upload .msg,.upload .reset{display:none}main{padding:18px 16px 40px}.grid2{grid-template-columns:1fr}.kpi .v{font-size:20px}}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+
+<div class="app">
+<nav>
+  <div class="brand">MERIDIAN</div>
+  <div class="brandsub">Meridian Cloud, Inc.</div>
+  <h1>CFO Cockpit</h1>
+  <a class="item" href="#overview">Overview</a>
+  <a class="item" href="#profitability">Profitability</a>
+  <a class="item" href="#cash">Cash</a>
+  <a class="item" href="#customers">Customers</a>
+  <a class="item gap" href="#check">Check of actual figures</a>
+  <div class="spacer"></div>
+  <div class="period">Reporting month<b id="navPeriod">—</b><span id="navRange"></span></div>
+  <div class="upload">
+    <label for="fileIn">Upload month or AR aging (.xlsx / .csv)</label>
+    <input id="fileIn" type="file" accept=".csv,.xlsx">
+    <div class="msg" id="fileMsg">Loaded: embedded 24-month pack</div>
+    <a href="#" id="resetBtn" class="reset">Reset to embedded pack</a>
+  </div>
+</nav>
+<main>
+
+<section id="overview">
+  <div class="sec-head"><h2>Overview</h2><div class="sub" id="ovSub"></div></div>
+  <div class="alert" id="ovAlert"></div>
+  <div class="brief" id="ovBrief"></div>
+  <div class="kpis" id="ovKpis"></div>
+  <div class="grid2">
+    <div class="card"><h3>Revenue and operating income</h3><div class="note">Monthly, USD thousands, 24 months</div><div id="chRevOI"></div><div class="legend"><span><i style="background:var(--steel)"></i>Total revenue</span><span><i style="background:var(--accent)"></i>Operating income</span></div></div>
+    <div class="card"><h3>ARR and active customers</h3><div class="note">Closing ARR (USD m) and customer count</div><div id="chArrCust"></div><div class="legend"><span><i style="background:var(--steel)"></i>ARR</span><span><i style="background:var(--accent)"></i>Active customers</span></div></div>
+  </div>
+</section>
+
+<section id="profitability">
+  <div class="sec-head"><h2>Profitability</h2><div class="sub" id="prSub"></div></div>
+  <div class="brief" id="prBrief"></div>
+  <div class="kpis" id="prKpis"></div>
+  <div class="grid2">
+    <div class="card"><h3 id="plTitle">P&amp;L — latest month</h3><div class="note">USD, vs prior month</div><div class="tblwrap" id="plTable"></div></div>
+    <div>
+      <div class="card" style="margin-bottom:14px"><h3>Margins</h3><div class="note">Gross margin % and operating margin %, 24 months</div><div id="chMargins"></div><div class="legend"><span><i style="background:var(--steel)"></i>Gross margin</span><span><i style="background:var(--accent)"></i>Operating margin</span></div></div>
+      <div class="card"><h3>Operating expenses by function</h3><div class="note">USD thousands, stacked</div><div id="chOpex"></div><div class="legend"><span><i style="background:var(--navy)"></i>Sales &amp; marketing</span><span><i style="background:var(--blue)"></i>R&amp;D</span><span><i style="background:var(--accent)"></i>G&amp;A</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="cash">
+  <div class="sec-head"><h2>Cash</h2><div class="sub" id="caSub"></div></div>
+  <div class="brief" id="caBrief"></div>
+  <div class="kpis" id="caKpis"></div>
+  <div class="grid2">
+    <div class="card"><h3>Cash balance, monthly burn and 6-month projection</h3><div class="note">Total cash (line), net cash change (bars), projection from 12-month statistics (dashed, ±1σ band) and 3-month burn (dotted)</div><div id="chCash"></div><div class="legend"><span><i style="background:var(--steel)"></i>Total cash</span><span><i style="background:var(--navy)"></i>Projection (12-mo mean)</span><span><i style="background:var(--bad)"></i>Stress (3-mo burn) / cash out</span><span><i style="background:var(--good)"></i>Cash in</span></div><div class="note" id="cashNote" style="margin-top:6px"></div></div>
+    <div class="card"><h3>Cash bridge — latest month</h3><div class="note">Indirect method from balance-sheet movements, USD thousands</div><div id="chWC"></div><div class="legend"><span><i style="background:var(--navy)"></i>Cash balance</span><span><i style="background:var(--good)"></i>Cash in</span><span><i style="background:var(--bad)"></i>Cash out</span></div><div class="note" id="wcNote" style="margin-top:6px"></div></div>
+  </div>
+</section>
+
+<section id="customers">
+  <div class="sec-head"><h2>Customers</h2><div class="sub" id="cuSub"></div></div>
+  <div class="brief" id="cuBrief"></div>
+  <div class="kpis" id="cuKpis"></div>
+  <div class="grid2">
+    <div class="card"><h3>MRR won vs MRR lost</h3><div class="note">Won = new + expansion; lost = contraction + churn. USD thousands</div><div id="chMrr"></div><div class="legend"><span><i style="background:var(--good)"></i>MRR won</span><span><i style="background:var(--bad)"></i>MRR lost</span><span><i style="background:var(--navy)"></i>Net new MRR</span></div></div>
+    <div class="card"><h3>Active customers and ARPA</h3><div class="note">Customer count (bars) and average revenue per account, USD/month (line)</div><div id="chCust"></div><div class="legend"><span><i style="background:var(--bluelt)"></i>Active customers</span><span><i style="background:var(--steel)"></i>ARPA</span></div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><h3>KPI scorecard — monthly KPI variances</h3><div class="note" id="scNote"></div><div class="tblwrap" id="scorecard"></div></div>
+</section>
+
+<section id="check">
+  <div class="sec-head"><h2>Check of actual figures</h2><div class="sub" id="ckSub"></div></div>
+  <p class="commentary" id="ckSummary"></p>
+  <div class="card"><h3>Source integrity — does the loaded file agree with itself?</h3><div class="note">Identities the pack promises; each is recomputed from the raw columns of the latest month</div><div class="tblwrap" id="ckIntegrity"></div></div>
+  <div class="card" style="margin-top:14px"><h3>Coverage — which columns the loaded file carries</h3><div class="note">Figures that depend on a missing column are shown as "not in file" in the sections above rather than estimated</div><div class="tblwrap" id="ckCoverage"></div></div>
+  <div class="card" style="margin-top:14px"><h3>Displayed figures vs source cells</h3><div class="note">Every headline figure in the four sections, the raw value it is read or computed from, and whether they agree</div><div class="tblwrap" id="ckFigures"></div></div>
+</section>
+
+<div class="foot" id="foot"></div>
+</main>
+</div>
+
+<script id="seed" type="application/json">
+[{"Month":"2024-09","Month Name":"Sep 2024","Subscription Revenue":880589.05,"Professional Services Revenue":19328.44,"Usage & Overage Revenue":54859.32,"Contra Revenue":-4216.66,"Total Revenue":950560.15,"Cost of Revenue":278672.67,"Gross Profit":671887.48,"Gross Margin %":0.706833,"Sales & Marketing":402215.88,"Research & Development":346910.4,"General & Administrative":258125.07,"Total Operating Expenses":1007251.35,"Operating Income":-335363.87,"Operating Margin %":-0.352807,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-346963.87,"Net Margin %":-0.36501,"Cash - Operating":2333887.19,"Cash - Money Market":3512200,"Accounts Receivable":1082834.57,"Unbilled Receivables":204.72,"Allowance for Doubtful Accounts":-98775.07,"Prepaid Expenses":385000,"Deferred Commissions":1189413.95,"Capitalised Software, net":1478368.6,"Property & Equipment":620000,"Accumulated Depreciation":-293750,"Accounts Payable":741332.97,"Accrued Expenses":314000,"Accrued Payroll & Bonus":760264.53,"Deferred Revenue":2492926.67,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":10209383.96,"Total Liabilities":6904524.17,"Total Equity (incl. YTD result)":3304859.79,"Assets less Liabilities & Equity":-0.0,"Opening MRR":853449.99,"New MRR":18583.34,"Expansion MRR":9592.21,"Contraction MRR":-1036.49,"Churned MRR":0.0,"Closing MRR":880589.05,"ARR":10567068.6,"Active Customers":308,"New Customers":8,"Churned Customers":0,"Logo Churn %":0.0,"Gross Revenue Churn %":0.0,"Net MRR Growth %":0.031799,"ARPA (monthly)":2859.055357,"Headcount (FTE)":57,"Revenue per FTE (annualised)":200117.9263},{"Month":"2024-10","Month Name":"Oct 2024","Subscription Revenue":917182.52,"Professional Services Revenue":29830.79,"Usage & Overage Revenue":62098.26,"Contra Revenue":-1313.24,"Total Revenue":1007798.33,"Cost of Revenue":301999.58,"Gross Profit":705798.75,"Gross Margin %":0.700337,"Sales & Marketing":521409.32,"Research & Development":347440.4,"General & Administrative":258554.72,"Total Operating Expenses":1127404.44,"Operating Income":-421605.69,"Operating Margin %":-0.418343,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-433205.69,"Net Margin %":-0.429854,"Cash - Operating":1602536.41,"Cash - Money Market":3524400,"Accounts Receivable":1957787.63,"Unbilled Receivables":713.56,"Allowance for Doubtful Accounts":-102769.79,"Prepaid Expenses":385000,"Deferred Commissions":1146072.56,"Capitalised Software, net":1474669.52,"Property & Equipment":620000,"Accumulated Depreciation":-302500,"Accounts Payable":498047.55,"Accrued Expenses":318000,"Accrued Payroll & Bonus":895137.76,"Deferred Revenue":3127070.48,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":10305909.89,"Total Liabilities":7434255.79,"Total Equity (incl. YTD result)":2871654.1,"Assets less Liabilities & Equity":-0.0,"Opening MRR":880589.05,"New MRR":31916.67,"Expansion MRR":8382.95,"Contraction MRR":-914.49,"Churned MRR":-2791.66,"Closing MRR":917182.52,"ARR":11006190.24,"Active Customers":314,"New Customers":8,"Churned Customers":2,"Logo Churn %":0.006494,"Gross Revenue Churn %":0.00317,"Net MRR Growth %":0.041556,"ARPA (monthly)":2920.963439,"Headcount (FTE)":59,"Revenue per FTE (annualised)":204975.9315},{"Month":"2024-11","Month Name":"Nov 2024","Subscription Revenue":934830.76,"Professional Services Revenue":18511.15,"Usage & Overage Revenue":66246.46,"Contra Revenue":-2345.11,"Total Revenue":1017243.26,"Cost of Revenue":314756.14,"Gross Profit":702487.12,"Gross Margin %":0.690579,"Sales & Marketing":427152.79,"Research & Development":347970.4,"General & Administrative":258811.08,"Total Operating Expenses":1033934.27,"Operating Income":-331447.15,"Operating Margin %":-0.325829,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-343047.15,"Net Margin %":-0.337232,"Cash - Operating":1426653.7,"Cash - Money Market":3536600,"Accounts Receivable":2030311.67,"Unbilled Receivables":11399.26,"Allowance for Doubtful Accounts":-106810.87,"Prepaid Expenses":385000,"Deferred Commissions":1094253.31,"Capitalised Software, net":1468902.77,"Property & Equipment":620000,"Accumulated Depreciation":-311250,"Accounts Payable":435887.16,"Accrued Expenses":322000,"Accrued Payroll & Bonus":1020422.59,"Deferred Revenue":3252143.14,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":10155059.84,"Total Liabilities":7626452.89,"Total Equity (incl. YTD result)":2528606.95,"Assets less Liabilities & Equity":-0.0,"Opening MRR":917182.52,"New MRR":17358.33,"Expansion MRR":11280.04,"Contraction MRR":-1181.81,"Churned MRR":-9808.33,"Closing MRR":934830.76,"ARR":11217969.12,"Active Customers":317,"New Customers":8,"Churned Customers":5,"Logo Churn %":0.015924,"Gross Revenue Churn %":0.010694,"Net MRR Growth %":0.019242,"ARPA (monthly)":2948.992934,"Headcount (FTE)":60,"Revenue per FTE (annualised)":203448.652},{"Month":"2024-12","Month Name":"Dec 2024","Subscription Revenue":968091.21,"Professional Services Revenue":42941.37,"Usage & Overage Revenue":50387.75,"Contra Revenue":-675.0,"Total Revenue":1060745.33,"Cost of Revenue":322136.38,"Gross Profit":738608.95,"Gross Margin %":0.696311,"Sales & Marketing":448836.0,"Research & Development":348500.4,"General & Administrative":259198.71,"Total Operating Expenses":1056535.11,"Operating Income":-317926.16,"Operating Margin %":-0.29972,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-329526.16,"Net Margin %":-0.310655,"Cash - Operating":1132511.78,"Cash - Money Market":3548800,"Accounts Receivable":2663951.83,"Unbilled Receivables":1515.1,"Allowance for Doubtful Accounts":-111029.58,"Prepaid Expenses":385000,"Deferred Commissions":1049228.46,"Capitalised Software, net":1461068.34,"Property & Equipment":620000,"Accumulated Depreciation":-320000,"Accounts Payable":447534.99,"Accrued Expenses":326000,"Accrued Payroll & Bonus":1158123.63,"Deferred Revenue":3704306.52,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":10431045.93,"Total Liabilities":8231965.14,"Total Equity (incl. YTD result)":2199080.79,"Assets less Liabilities & Equity":0.0,"Opening MRR":934830.76,"New MRR":28025.0,"Expansion MRR":12060.26,"Contraction MRR":-3453.69,"Churned MRR":-3371.17,"Closing MRR":968091.21,"ARR":11617094.52,"Active Customers":320,"New Customers":6,"Churned Customers":3,"Logo Churn %":0.009464,"Gross Revenue Churn %":0.003606,"Net MRR Growth %":0.035579,"ARPA (monthly)":3025.285031,"Headcount (FTE)":61,"Revenue per FTE (annualised)":208671.2125},{"Month":"2025-01","Month Name":"Jan 2025","Subscription Revenue":982242.66,"Professional Services Revenue":8966.26,"Usage & Overage Revenue":55396.68,"Contra Revenue":-1874.21,"Total Revenue":1044731.39,"Cost of Revenue":327947.82,"Gross Profit":716783.57,"Gross Margin %":0.686094,"Sales & Marketing":448288.88,"Research & Development":358267.26,"General & Administrative":279498.19,"Total Operating Expenses":1086054.33,"Operating Income":-369270.76,"Operating Margin %":-0.35346,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-380870.76,"Net Margin %":-0.364563,"Cash - Operating":1219632.85,"Cash - Money Market":3561000,"Accounts Receivable":2585933.72,"Unbilled Receivables":4175.79,"Allowance for Doubtful Accounts":-115177.77,"Prepaid Expenses":385000,"Deferred Commissions":989296.24,"Capitalised Software, net":1453699.14,"Property & Equipment":620000,"Accumulated Depreciation":-328750,"Accounts Payable":416283.91,"Accrued Expenses":330000,"Accrued Payroll & Bonus":1280448.43,"Deferred Revenue":3933867.6,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":10374809.97,"Total Liabilities":8556599.94,"Total Equity (incl. YTD result)":1818210.03,"Assets less Liabilities & Equity":0.0,"Opening MRR":968091.21,"New MRR":11900.0,"Expansion MRR":6618.97,"Contraction MRR":-2306.09,"Churned MRR":-2061.41,"Closing MRR":982242.66,"ARR":11786911.92,"Active Customers":322,"New Customers":6,"Churned Customers":4,"Logo Churn %":0.0125,"Gross Revenue Churn %":0.002129,"Net MRR Growth %":0.014618,"ARPA (monthly)":3050.443043,"Headcount (FTE)":62,"Revenue per FTE (annualised)":202206.0755},{"Month":"2025-02","Month Name":"Feb 2025","Subscription Revenue":1016290.65,"Professional Services Revenue":34977.89,"Usage & Overage Revenue":73750.4,"Contra Revenue":-1491.67,"Total Revenue":1123527.27,"Cost of Revenue":333838.89,"Gross Profit":789688.38,"Gross Margin %":0.702865,"Sales & Marketing":480152.84,"Research & Development":358797.26,"General & Administrative":280031.83,"Total Operating Expenses":1118981.93,"Operating Income":-329293.55,"Operating Margin %":-0.293089,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-340893.55,"Net Margin %":-0.303414,"Cash - Operating":1464150.93,"Cash - Money Market":3573200,"Accounts Receivable":2253923.67,"Unbilled Receivables":1221.96,"Allowance for Doubtful Accounts":-119649.6,"Prepaid Expenses":385000,"Deferred Commissions":942239.46,"Capitalised Software, net":1444189.9,"Property & Equipment":620000,"Accumulated Depreciation":-337500,"Accounts Payable":459488.37,"Accrued Expenses":334000,"Accrued Payroll & Bonus":1424202.5,"Deferred Revenue":3935768.97,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":10226776.32,"Total Liabilities":8749459.84,"Total Equity (incl. YTD result)":1477316.48,"Assets less Liabilities & Equity":0.0,"Opening MRR":982242.66,"New MRR":32733.34,"Expansion MRR":6244.79,"Contraction MRR":-1596.81,"Churned MRR":-3333.33,"Closing MRR":1016290.65,"ARR":12195487.8,"Active Customers":328,"New Customers":10,"Churned Customers":4,"Logo Churn %":0.012422,"Gross Revenue Churn %":0.003394,"Net MRR Growth %":0.034664,"ARPA (monthly)":3098.447104,"Headcount (FTE)":63,"Revenue per FTE (annualised)":214005.1943},{"Month":"2025-03","Month Name":"Mar 2025","Subscription Revenue":1045345.42,"Professional Services Revenue":26552.95,"Usage & Overage Revenue":65730.49,"Contra Revenue":-4980.96,"Total Revenue":1132647.9,"Cost of Revenue":337214.07,"Gross Profit":795433.83,"Gross Margin %":0.702278,"Sales & Marketing":568870.82,"Research & Development":374956.59,"General & Administrative":280279.48,"Total Operating Expenses":1224106.89,"Operating Income":-428673.06,"Operating Margin %":-0.37847,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-440273.06,"Net Margin %":-0.388711,"Cash - Operating":1087864.02,"Cash - Money Market":3585400,"Accounts Receivable":2368865.23,"Unbilled Receivables":4551.69,"Allowance for Doubtful Accounts":-124159.08,"Prepaid Expenses":385000,"Deferred Commissions":889410.03,"Capitalised Software, net":1436826.43,"Property & Equipment":620000,"Accumulated Depreciation":-346250,"Accounts Payable":491624.39,"Accrued Expenses":338000,"Accrued Payroll & Bonus":1563120.38,"Deferred Revenue":3881720.13,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":9907508.32,"Total Liabilities":8870464.9,"Total Equity (incl. YTD result)":1037043.42,"Assets less Liabilities & Equity":0.0,"Opening MRR":1016290.65,"New MRR":23199.99,"Expansion MRR":8235.74,"Contraction MRR":-1402.31,"Churned MRR":-978.62,"Closing MRR":1045345.42,"ARR":12544145.04,"Active Customers":337,"New Customers":10,"Churned Customers":1,"Logo Churn %":0.003049,"Gross Revenue Churn %":0.000963,"Net MRR Growth %":0.028589,"ARPA (monthly)":3101.915193,"Headcount (FTE)":64,"Revenue per FTE (annualised)":212371.4813},{"Month":"2025-04","Month Name":"Apr 2025","Subscription Revenue":1079526.48,"Professional Services Revenue":30514.54,"Usage & Overage Revenue":62276.94,"Contra Revenue":-1125.0,"Total Revenue":1171192.96,"Cost of Revenue":342181.45,"Gross Profit":829011.51,"Gross Margin %":0.707835,"Sales & Marketing":503150.69,"Research & Development":400416.02,"General & Administrative":280640.99,"Total Operating Expenses":1184207.7,"Operating Income":-355196.19,"Operating Margin %":-0.303277,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-366796.19,"Net Margin %":-0.313182,"Cash - Operating":994616.05,"Cash - Money Market":3597600,"Accounts Receivable":2166783.89,"Unbilled Receivables":8744.89,"Allowance for Doubtful Accounts":-128820.07,"Prepaid Expenses":385000,"Deferred Commissions":844022.92,"Capitalised Software, net":1434036.52,"Property & Equipment":620000,"Accumulated Depreciation":-355000,"Accounts Payable":470549.31,"Accrued Expenses":342000,"Accrued Payroll & Bonus":1719581.94,"Deferred Revenue":3768605.72,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":9566984.2,"Total Liabilities":8896736.97,"Total Equity (incl. YTD result)":670247.23,"Assets less Liabilities & Equity":-0.0,"Opening MRR":1045345.42,"New MRR":34591.66,"Expansion MRR":9384.83,"Contraction MRR":-1053.66,"Churned MRR":-8741.76,"Closing MRR":1079526.48,"ARR":12954317.76,"Active Customers":341,"New Customers":9,"Churned Customers":5,"Logo Churn %":0.014837,"Gross Revenue Churn %":0.008363,"Net MRR Growth %":0.032698,"ARPA (monthly)":3165.766804,"Headcount (FTE)":67,"Revenue per FTE (annualised)":209765.9033},{"Month":"2025-05","Month Name":"May 2025","Subscription Revenue":1107066.47,"Professional Services Revenue":5697.08,"Usage & Overage Revenue":73796.88,"Contra Revenue":-1325.28,"Total Revenue":1185235.15,"Cost of Revenue":348155.3,"Gross Profit":837079.85,"Gross Margin %":0.706256,"Sales & Marketing":502303.38,"Research & Development":415068.38,"General & Administrative":295526.37,"Total Operating Expenses":1212898.13,"Operating Income":-375818.28,"Operating Margin %":-0.317083,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-387418.28,"Net Margin %":-0.32687,"Cash - Operating":724289.27,"Cash - Money Market":3609800,"Accounts Receivable":2193627.3,"Unbilled Receivables":17210.77,"Allowance for Doubtful Accounts":-133528.44,"Prepaid Expenses":385000,"Deferred Commissions":790693.21,"Capitalised Software, net":1432661.4,"Property & Equipment":620000,"Accumulated Depreciation":-363750,"Accounts Payable":457293.05,"Accrued Expenses":346000,"Accrued Payroll & Bonus":1869689.47,"Deferred Revenue":3724192.04,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":9276003.51,"Total Liabilities":8993174.56,"Total Equity (incl. YTD result)":282828.95,"Assets less Liabilities & Equity":-0.0,"Opening MRR":1079526.48,"New MRR":7875.0,"Expansion MRR":25391.01,"Contraction MRR":-1595.48,"Churned MRR":-4130.51,"Closing MRR":1107066.47,"ARR":13284797.64,"Active Customers":345,"New Customers":8,"Churned Customers":4,"Logo Churn %":0.01173,"Gross Revenue Churn %":0.003826,"Net MRR Growth %":0.025511,"ARPA (monthly)":3208.888319,"Headcount (FTE)":69,"Revenue per FTE (annualised)":206127.8522},{"Month":"2025-06","Month Name":"Jun 2025","Subscription Revenue":1129357.25,"Professional Services Revenue":2797.7,"Usage & Overage Revenue":70232.47,"Contra Revenue":-1437.58,"Total Revenue":1200949.84,"Cost of Revenue":349186.28,"Gross Profit":851763.56,"Gross Margin %":0.709242,"Sales & Marketing":592321.75,"Research & Development":415598.38,"General & Administrative":295804.94,"Total Operating Expenses":1303725.07,"Operating Income":-451961.51,"Operating Margin %":-0.376337,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-463561.51,"Net Margin %":-0.385996,"Cash - Operating":666208.1,"Cash - Money Market":3622000,"Accounts Receivable":1664881.73,"Unbilled Receivables":34863.94,"Allowance for Doubtful Accounts":-138305.38,"Prepaid Expenses":385000,"Deferred Commissions":730662.37,"Capitalised Software, net":1428717.82,"Property & Equipment":620000,"Accumulated Depreciation":-372500,"Accounts Payable":552549.35,"Accrued Expenses":350000,"Accrued Payroll & Bonus":2012790.17,"Deferred Revenue":3310921.62,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8641528.58,"Total Liabilities":8822261.14,"Total Equity (incl. YTD result)":-180732.56,"Assets less Liabilities & Equity":-0.0,"Opening MRR":1107066.47,"New MRR":5175.01,"Expansion MRR":18922.32,"Contraction MRR":-958.15,"Churned MRR":-848.42,"Closing MRR":1129357.25,"ARR":13552287.0,"Active Customers":349,"New Customers":6,"Churned Customers":2,"Logo Churn %":0.005797,"Gross Revenue Churn %":0.000766,"Net MRR Growth %":0.020135,"ARPA (monthly)":3235.980659,"Headcount (FTE)":70,"Revenue per FTE (annualised)":205877.1154},{"Month":"2025-07","Month Name":"Jul 2025","Subscription Revenue":1161418.81,"Professional Services Revenue":30707.95,"Usage & Overage Revenue":75178.4,"Contra Revenue":-7961.32,"Total Revenue":1259343.84,"Cost of Revenue":373045.02,"Gross Profit":886298.82,"Gross Margin %":0.703778,"Sales & Marketing":532322.83,"Research & Development":446439.81,"General & Administrative":296275.38,"Total Operating Expenses":1275038.02,"Operating Income":-388739.2,"Operating Margin %":-0.308684,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-400339.2,"Net Margin %":-0.317895,"Cash - Operating":3128.67,"Cash - Money Market":3634200,"Accounts Receivable":2020981.69,"Unbilled Receivables":68885.3,"Allowance for Doubtful Accounts":-143342.76,"Prepaid Expenses":385000,"Deferred Commissions":683187.23,"Capitalised Software, net":1430517.67,"Property & Equipment":620000,"Accumulated Depreciation":-381250,"Accounts Payable":493801.2,"Accrued Expenses":354000,"Accrued Payroll & Bonus":2181556.48,"Deferred Revenue":3277021.88,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8321307.8,"Total Liabilities":8902379.56,"Total Equity (incl. YTD result)":-581071.76,"Assets less Liabilities & Equity":0.0,"Opening MRR":1129357.25,"New MRR":28525.01,"Expansion MRR":15731.63,"Contraction MRR":-2309.72,"Churned MRR":-9885.36,"Closing MRR":1161418.81,"ARR":13937025.72,"Active Customers":356,"New Customers":12,"Churned Customers":5,"Logo Churn %":0.014327,"Gross Revenue Churn %":0.008753,"Net MRR Growth %":0.028389,"ARPA (monthly)":3262.412388,"Headcount (FTE)":73,"Revenue per FTE (annualised)":207015.4258},{"Month":"2025-08","Month Name":"Aug 2025","Subscription Revenue":1192830.09,"Professional Services Revenue":21239.14,"Usage & Overage Revenue":74137.2,"Contra Revenue":-7188.78,"Total Revenue":1281017.65,"Cost of Revenue":381691.79,"Gross Profit":899325.86,"Gross Margin %":0.70204,"Sales & Marketing":535809.65,"Research & Development":446969.81,"General & Administrative":296572.07,"Total Operating Expenses":1279351.53,"Operating Income":-380025.67,"Operating Margin %":-0.296659,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-391625.67,"Net Margin %":-0.305714,"Cash - Operating":-355708.88,"Cash - Money Market":3646400,"Accounts Receivable":2539853.97,"Unbilled Receivables":67361.77,"Allowance for Doubtful Accounts":-148466.83,"Prepaid Expenses":385000,"Deferred Commissions":634228.01,"Capitalised Software, net":1429511.58,"Property & Equipment":620000,"Accumulated Depreciation":-390000,"Accounts Payable":503112.94,"Accrued Expenses":358000,"Accrued Payroll & Bonus":2349594.62,"Deferred Revenue":3594169.49,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8428179.62,"Total Liabilities":9400877.05,"Total Equity (incl. YTD result)":-972697.43,"Assets less Liabilities & Equity":-0.0,"Opening MRR":1161418.81,"New MRR":19250.02,"Expansion MRR":24248.11,"Contraction MRR":-2424.78,"Churned MRR":-9662.07,"Closing MRR":1192830.09,"ARR":14313961.08,"Active Customers":362,"New Customers":10,"Churned Customers":4,"Logo Churn %":0.011236,"Gross Revenue Churn %":0.008319,"Net MRR Growth %":0.027046,"ARPA (monthly)":3295.110746,"Headcount (FTE)":73,"Revenue per FTE (annualised)":210578.2438},{"Month":"2025-09","Month Name":"Sep 2025","Subscription Revenue":1225510.14,"Professional Services Revenue":9209.57,"Usage & Overage Revenue":88682.13,"Contra Revenue":-517.88,"Total Revenue":1322883.96,"Cost of Revenue":401875.37,"Gross Profit":921008.59,"Gross Margin %":0.696213,"Sales & Marketing":538538.73,"Research & Development":447499.81,"General & Administrative":296916.28,"Total Operating Expenses":1282954.82,"Operating Income":-361946.23,"Operating Margin %":-0.273604,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-373546.23,"Net Margin %":-0.282373,"Cash - Operating":-169881.04,"Cash - Money Market":3658600,"Accounts Receivable":1870637.3,"Unbilled Receivables":136653.71,"Allowance for Doubtful Accounts":-153725.11,"Prepaid Expenses":385000,"Deferred Commissions":579119.31,"Capitalised Software, net":1425699.56,"Property & Equipment":620000,"Accumulated Depreciation":-398750,"Accounts Payable":506469.36,"Accrued Expenses":362000,"Accrued Payroll & Bonus":2512263.44,"Deferred Revenue":3322864.59,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":7953353.73,"Total Liabilities":9299597.39,"Total Equity (incl. YTD result)":-1346243.66,"Assets less Liabilities & Equity":0.0,"Opening MRR":1192830.09,"New MRR":14275.01,"Expansion MRR":21256.48,"Contraction MRR":-1528.72,"Churned MRR":-1322.71,"Closing MRR":1225510.14,"ARR":14706121.68,"Active Customers":368,"New Customers":8,"Churned Customers":2,"Logo Churn %":0.005525,"Gross Revenue Churn %":0.001109,"Net MRR Growth %":0.027397,"ARPA (monthly)":3330.190598,"Headcount (FTE)":75,"Revenue per FTE (annualised)":211661.4336},{"Month":"2025-10","Month Name":"Oct 2025","Subscription Revenue":1239045.08,"Professional Services Revenue":17034.38,"Usage & Overage Revenue":68874.05,"Contra Revenue":-3231.32,"Total Revenue":1321722.19,"Cost of Revenue":413213.09,"Gross Profit":908509.1,"Gross Margin %":0.687368,"Sales & Marketing":629290.47,"Research & Development":448029.81,"General & Administrative":297131.16,"Total Operating Expenses":1374451.44,"Operating Income":-465942.34,"Operating Margin %":-0.352527,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-477542.34,"Net Margin %":-0.361303,"Cash - Operating":-695478.09,"Cash - Money Market":3670800,"Accounts Receivable":2895947.98,"Unbilled Receivables":112506.31,"Allowance for Doubtful Accounts":-158988.27,"Prepaid Expenses":385000,"Deferred Commissions":516522.02,"Capitalised Software, net":1419081.6,"Property & Equipment":620000,"Accumulated Depreciation":-407500,"Accounts Payable":549964.96,"Accrued Expenses":366000,"Accrued Payroll & Bonus":2665041.59,"Deferred Revenue":4004671.0,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8357891.55,"Total Liabilities":10181677.55,"Total Equity (incl. YTD result)":-1823786.0,"Assets less Liabilities & Equity":0.0,"Opening MRR":1225510.14,"New MRR":15341.67,"Expansion MRR":9887.04,"Contraction MRR":-417.6,"Churned MRR":-11276.11,"Closing MRR":1239045.08,"ARR":14868540.96,"Active Customers":372,"New Customers":7,"Churned Customers":3,"Logo Churn %":0.008152,"Gross Revenue Churn %":0.009201,"Net MRR Growth %":0.011044,"ARPA (monthly)":3330.766344,"Headcount (FTE)":75,"Revenue per FTE (annualised)":211475.5504},{"Month":"2025-11","Month Name":"Nov 2025","Subscription Revenue":1281057.7,"Professional Services Revenue":35274.65,"Usage & Overage Revenue":80540.4,"Contra Revenue":-2383.94,"Total Revenue":1394488.81,"Cost of Revenue":419321.52,"Gross Profit":975167.29,"Gross Margin %":0.699301,"Sales & Marketing":562874.75,"Research & Development":448559.81,"General & Administrative":297618.58,"Total Operating Expenses":1309053.14,"Operating Income":-333885.85,"Operating Margin %":-0.239432,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-345485.85,"Net Margin %":-0.247751,"Cash - Operating":-789222.1,"Cash - Money Market":3683000,"Accounts Receivable":3318061.86,"Unbilled Receivables":88715.5,"Allowance for Doubtful Accounts":-164528.85,"Prepaid Expenses":385000,"Deferred Commissions":468614.4,"Capitalised Software, net":1409657.7,"Property & Equipment":620000,"Accumulated Depreciation":-416250,"Accounts Payable":528676.16,"Accrued Expenses":370000,"Accrued Payroll & Bonus":2841562.73,"Deferred Revenue":4436081.47,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8603048.51,"Total Liabilities":10772320.36,"Total Equity (incl. YTD result)":-2169271.85,"Assets less Liabilities & Equity":0.0,"Opening MRR":1239045.08,"New MRR":31508.35,"Expansion MRR":17203.74,"Contraction MRR":-1452.14,"Churned MRR":-5247.32,"Closing MRR":1281057.7,"ARR":15372692.4,"Active Customers":378,"New Customers":9,"Churned Customers":3,"Logo Churn %":0.008065,"Gross Revenue Churn %":0.004235,"Net MRR Growth %":0.033907,"ARPA (monthly)":3389.041534,"Headcount (FTE)":76,"Revenue per FTE (annualised)":220182.4437},{"Month":"2025-12","Month Name":"Dec 2025","Subscription Revenue":1297716.71,"Professional Services Revenue":10827.65,"Usage & Overage Revenue":68090.54,"Contra Revenue":-5823.36,"Total Revenue":1370811.54,"Cost of Revenue":431987.01,"Gross Profit":938824.53,"Gross Margin %":0.684868,"Sales & Marketing":553011.46,"Research & Development":449089.8,"General & Administrative":297734.97,"Total Operating Expenses":1299836.23,"Operating Income":-361011.7,"Operating Margin %":-0.263356,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-372611.7,"Net Margin %":-0.271818,"Cash - Operating":62169.24,"Cash - Money Market":3695200,"Accounts Receivable":2726925.16,"Unbilled Receivables":123155.49,"Allowance for Doubtful Accounts":-169975.82,"Prepaid Expenses":385000,"Deferred Commissions":402861.25,"Capitalised Software, net":1397427.86,"Property & Equipment":620000,"Accumulated Depreciation":-425000,"Accounts Payable":525618.25,"Accrued Expenses":374000,"Accrued Payroll & Bonus":2994608.75,"Deferred Revenue":4869419.73,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8817763.18,"Total Liabilities":11359646.73,"Total Equity (incl. YTD result)":-2541883.55,"Assets less Liabilities & Equity":-0.0,"Opening MRR":1281057.7,"New MRR":11258.35,"Expansion MRR":11661.89,"Contraction MRR":-2154.1,"Churned MRR":-4107.1,"Closing MRR":1297716.71,"ARR":15572600.52,"Active Customers":383,"New Customers":9,"Churned Customers":4,"Logo Churn %":0.010582,"Gross Revenue Churn %":0.003206,"Net MRR Growth %":0.013004,"ARPA (monthly)":3388.294282,"Headcount (FTE)":77,"Revenue per FTE (annualised)":213632.9673},{"Month":"2026-01","Month Name":"Jan 2026","Subscription Revenue":1320477.67,"Professional Services Revenue":25625.48,"Usage & Overage Revenue":63395.43,"Contra Revenue":-1389.52,"Total Revenue":1408109.06,"Cost of Revenue":445137.92,"Gross Profit":962971.14,"Gross Margin %":0.683875,"Sales & Marketing":571257.41,"Research & Development":506093.78,"General & Administrative":304007.86,"Total Operating Expenses":1381359.05,"Operating Income":-418387.91,"Operating Margin %":-0.297127,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-429987.91,"Net Margin %":-0.305365,"Cash - Operating":274129.31,"Cash - Money Market":3707400,"Accounts Receivable":2867103.15,"Unbilled Receivables":52431.2,"Allowance for Doubtful Accounts":-175564.1,"Prepaid Expenses":385000,"Deferred Commissions":344270.19,"Capitalised Software, net":1397878.18,"Property & Equipment":620000,"Accumulated Depreciation":-433750,"Accounts Payable":534096.91,"Accrued Expenses":378000,"Accrued Payroll & Bonus":3170344.22,"Deferred Revenue":5332328.26,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":9038897.93,"Total Liabilities":12010769.39,"Total Equity (incl. YTD result)":-2971871.46,"Assets less Liabilities & Equity":0.0,"Opening MRR":1297716.71,"New MRR":23650.0,"Expansion MRR":11085.96,"Contraction MRR":-728.68,"Churned MRR":-11246.34,"Closing MRR":1320477.67,"ARR":15845732.04,"Active Customers":388,"New Customers":10,"Churned Customers":5,"Logo Churn %":0.013055,"Gross Revenue Churn %":0.008666,"Net MRR Growth %":0.017539,"ARPA (monthly)":3403.292964,"Headcount (FTE)":79,"Revenue per FTE (annualised)":213889.9838},{"Month":"2026-02","Month Name":"Feb 2026","Subscription Revenue":1354830.71,"Professional Services Revenue":38276.81,"Usage & Overage Revenue":99533.83,"Contra Revenue":-4863.49,"Total Revenue":1487777.86,"Cost of Revenue":508516.83,"Gross Profit":979261.03,"Gross Margin %":0.658204,"Sales & Marketing":571747.1,"Research & Development":506623.79,"General & Administrative":349659.77,"Total Operating Expenses":1428030.66,"Operating Income":-448769.63,"Operating Margin %":-0.301638,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-460369.63,"Net Margin %":-0.309434,"Cash - Operating":504630.65,"Cash - Money Market":3719600,"Accounts Receivable":2718513.19,"Unbilled Receivables":53478.62,"Allowance for Doubtful Accounts":-181460.01,"Prepaid Expenses":385000,"Deferred Commissions":290680.92,"Capitalised Software, net":1395080.1,"Property & Equipment":620000,"Accumulated Depreciation":-442500,"Accounts Payable":584147.25,"Accrued Expenses":382000,"Accrued Payroll & Bonus":3360969.9,"Deferred Revenue":5572147.41,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":9063023.47,"Total Liabilities":12495264.56,"Total Equity (incl. YTD result)":-3432241.09,"Assets less Liabilities & Equity":0.0,"Opening MRR":1320477.67,"New MRR":32058.33,"Expansion MRR":11575.24,"Contraction MRR":-4034.11,"Churned MRR":-5246.4,"Closing MRR":1354830.71,"ARR":16257968.52,"Active Customers":392,"New Customers":8,"Churned Customers":4,"Logo Churn %":0.010309,"Gross Revenue Churn %":0.003973,"Net MRR Growth %":0.026016,"ARPA (monthly)":3456.200791,"Headcount (FTE)":82,"Revenue per FTE (annualised)":217723.5893},{"Month":"2026-03","Month Name":"Mar 2026","Subscription Revenue":1381475.86,"Professional Services Revenue":9893.19,"Usage & Overage Revenue":82329.57,"Contra Revenue":-1980.89,"Total Revenue":1471717.73,"Cost of Revenue":462632.66,"Gross Profit":1009085.07,"Gross Margin %":0.685651,"Sales & Marketing":589736.73,"Research & Development":507153.77,"General & Administrative":349804.78,"Total Operating Expenses":1446695.28,"Operating Income":-437610.21,"Operating Margin %":-0.297347,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-449210.21,"Net Margin %":-0.305229,"Cash - Operating":573233.96,"Cash - Money Market":3731800,"Accounts Receivable":2250674.3,"Unbilled Receivables":23365.41,"Allowance for Doubtful Accounts":-187290.93,"Prepaid Expenses":385000,"Deferred Commissions":302802.49,"Capitalised Software, net":1389033.62,"Property & Equipment":620000,"Accumulated Depreciation":-451250,"Accounts Payable":598496.77,"Accrued Expenses":386000,"Accrued Payroll & Bonus":3547075.03,"Deferred Revenue":5391248.35,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8637368.85,"Total Liabilities":12518820.15,"Total Equity (incl. YTD result)":-3881451.3,"Assets less Liabilities & Equity":0.0,"Opening MRR":1354830.71,"New MRR":11025.0,"Expansion MRR":29220.85,"Contraction MRR":-2266.94,"Churned MRR":-11333.79,"Closing MRR":1381475.86,"ARR":16577710.32,"Active Customers":397,"New Customers":10,"Churned Customers":5,"Logo Churn %":0.012755,"Gross Revenue Churn %":0.008365,"Net MRR Growth %":0.019667,"ARPA (monthly)":3479.78806,"Headcount (FTE)":82,"Revenue per FTE (annualised)":215373.3263},{"Month":"2026-04","Month Name":"Apr 2026","Subscription Revenue":1379103.46,"Professional Services Revenue":34939.25,"Usage & Overage Revenue":90963.4,"Contra Revenue":-1308.33,"Total Revenue":1503697.78,"Cost of Revenue":469013.65,"Gross Profit":1034684.13,"Gross Margin %":0.688093,"Sales & Marketing":522785.19,"Research & Development":518958.2,"General & Administrative":350160.11,"Total Operating Expenses":1391903.5,"Operating Income":-357219.37,"Operating Margin %":-0.237561,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-368819.37,"Net Margin %":-0.245275,"Cash - Operating":117629.99,"Cash - Money Market":3744000,"Accounts Receivable":2500297.08,"Unbilled Receivables":36144.22,"Allowance for Doubtful Accounts":-193267.18,"Prepaid Expenses":385000,"Deferred Commissions":323110.7,"Capitalised Software, net":1382830.38,"Property & Equipment":620000,"Accumulated Depreciation":-460000,"Accounts Payable":522757.86,"Accrued Expenses":390000,"Accrued Payroll & Bonus":3749812.62,"Deferred Revenue":5447445.38,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8455745.19,"Total Liabilities":12706015.86,"Total Equity (incl. YTD result)":-4250270.67,"Assets less Liabilities & Equity":0.0,"Opening MRR":1381475.86,"New MRR":31416.67,"Expansion MRR":22819.57,"Contraction MRR":-3506.66,"Churned MRR":-53101.99,"Closing MRR":1379103.46,"ARR":16549241.52,"Active Customers":396,"New Customers":6,"Churned Customers":7,"Logo Churn %":0.017632,"Gross Revenue Churn %":0.038439,"Net MRR Growth %":-0.001717,"ARPA (monthly)":3482.584495,"Headcount (FTE)":84,"Revenue per FTE (annualised)":214813.9686},{"Month":"2026-05","Month Name":"May 2026","Subscription Revenue":1395689.11,"Professional Services Revenue":12648.39,"Usage & Overage Revenue":103535.08,"Contra Revenue":-9789.27,"Total Revenue":1502083.31,"Cost of Revenue":398991.9,"Gross Profit":1103091.41,"Gross Margin %":0.734374,"Sales & Marketing":514678.06,"Research & Development":519488.2,"General & Administrative":548255.49,"Total Operating Expenses":1582421.75,"Operating Income":-479330.34,"Operating Margin %":-0.31911,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-490930.34,"Net Margin %":-0.326833,"Cash - Operating":-523684.38,"Cash - Money Market":3756200,"Accounts Receivable":2859346.19,"Unbilled Receivables":49477.63,"Allowance for Doubtful Accounts":-199274.11,"Prepaid Expenses":385000,"Deferred Commissions":320672.72,"Capitalised Software, net":1447290.41,"Property & Equipment":620000,"Accumulated Depreciation":-468750,"Accounts Payable":739986.98,"Accrued Expenses":394000,"Accrued Payroll & Bonus":3922273.11,"Deferred Revenue":5335219.38,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":8246278.46,"Total Liabilities":12987479.47,"Total Equity (incl. YTD result)":-4741201.01,"Assets less Liabilities & Equity":0.0,"Opening MRR":1379103.46,"New MRR":11949.99,"Expansion MRR":9140.77,"Contraction MRR":-2975.55,"Churned MRR":-1529.53,"Closing MRR":1395689.11,"ARR":16748269.32,"Active Customers":404,"New Customers":9,"Churned Customers":1,"Logo Churn %":0.002525,"Gross Revenue Churn %":0.001109,"Net MRR Growth %":0.012026,"ARPA (monthly)":3454.676015,"Headcount (FTE)":85,"Revenue per FTE (annualised)":212058.8202},{"Month":"2026-06","Month Name":"Jun 2026","Subscription Revenue":1416647.72,"Professional Services Revenue":20705.17,"Usage & Overage Revenue":80349.76,"Contra Revenue":-2501.49,"Total Revenue":1515201.16,"Cost of Revenue":409628.75,"Gross Profit":1105572.41,"Gross Margin %":0.729654,"Sales & Marketing":661190.95,"Research & Development":520018.19,"General & Administrative":363489.73,"Total Operating Expenses":1544698.87,"Operating Income":-439126.46,"Operating Margin %":-0.289814,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-450726.46,"Net Margin %":-0.29747,"Cash - Operating":-622313.0,"Cash - Money Market":3768400,"Accounts Receivable":2053575.27,"Unbilled Receivables":128223.89,"Allowance for Doubtful Accounts":-205305.28,"Prepaid Expenses":385000,"Deferred Commissions":324470.07,"Capitalised Software, net":1508413.71,"Property & Equipment":620000,"Accumulated Depreciation":-477500,"Accounts Payable":659409.88,"Accrued Expenses":398000,"Accrued Payroll & Bonus":4107580.84,"Deferred Revenue":4913901.41,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":7482964.66,"Total Liabilities":12674892.13,"Total Equity (incl. YTD result)":-5191927.47,"Assets less Liabilities & Equity":0.0,"Opening MRR":1395689.11,"New MRR":19374.99,"Expansion MRR":12041.75,"Contraction MRR":-567.3,"Churned MRR":-9890.84,"Closing MRR":1416647.72,"ARR":16999772.64,"Active Customers":407,"New Customers":6,"Churned Customers":3,"Logo Churn %":0.007426,"Gross Revenue Churn %":0.007087,"Net MRR Growth %":0.015017,"ARPA (monthly)":3480.706929,"Headcount (FTE)":85,"Revenue per FTE (annualised)":213910.752},{"Month":"2026-07","Month Name":"Jul 2026","Subscription Revenue":1444504.11,"Professional Services Revenue":14485.13,"Usage & Overage Revenue":97293.0,"Contra Revenue":-5640.45,"Total Revenue":1550641.79,"Cost of Revenue":406278.12,"Gross Profit":1144363.67,"Gross Margin %":0.737994,"Sales & Marketing":591639.33,"Research & Development":520548.2,"General & Administrative":363853.1,"Total Operating Expenses":1476040.63,"Operating Income":-331676.96,"Operating Margin %":-0.213897,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-343276.96,"Net Margin %":-0.221377,"Cash - Operating":-1086889.16,"Cash - Money Market":3780600,"Accounts Receivable":2169496.83,"Unbilled Receivables":174572.26,"Allowance for Doubtful Accounts":-211489.82,"Prepaid Expenses":385000,"Deferred Commissions":328862.91,"Capitalised Software, net":1566200.28,"Property & Equipment":620000,"Accumulated Depreciation":-486250,"Accounts Payable":590060.55,"Accrued Expenses":402000,"Accrued Payroll & Bonus":4292840.99,"Deferred Revenue":4894406.19,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":7240103.3,"Total Liabilities":12775307.73,"Total Equity (incl. YTD result)":-5535204.43,"Assets less Liabilities & Equity":-0.0,"Opening MRR":1416647.72,"New MRR":17233.33,"Expansion MRR":16183.46,"Contraction MRR":-2203.47,"Churned MRR":-3356.97,"Closing MRR":1444504.11,"ARR":17334049.32,"Active Customers":414,"New Customers":11,"Churned Customers":4,"Logo Churn %":0.009828,"Gross Revenue Churn %":0.00237,"Net MRR Growth %":0.019664,"ARPA (monthly)":3489.140362,"Headcount (FTE)":86,"Revenue per FTE (annualised)":216368.6219},{"Month":"2026-08","Month Name":"Aug 2026","Subscription Revenue":1492710.01,"Professional Services Revenue":32322.44,"Usage & Overage Revenue":94130.5,"Contra Revenue":-905.39,"Total Revenue":1618257.56,"Cost of Revenue":418431.55,"Gross Profit":1199826.01,"Gross Margin %":0.741431,"Sales & Marketing":567572.69,"Research & Development":521078.2,"General & Administrative":387337.82,"Total Operating Expenses":1475988.71,"Operating Income":-276162.7,"Operating Margin %":-0.170654,"Other Income / (Expense)":-7600,"Income Tax":4000,"Net Income":-287762.7,"Net Margin %":-0.177823,"Cash - Operating":-1676380.97,"Cash - Money Market":3792800,"Accounts Receivable":3001428.29,"Unbilled Receivables":29772.78,"Allowance for Doubtful Accounts":-217924.88,"Prepaid Expenses":385000,"Deferred Commissions":348902.76,"Capitalised Software, net":1620650.12,"Property & Equipment":620000,"Accumulated Depreciation":-495000,"Accounts Payable":551832.08,"Accrued Expenses":406000,"Accrued Payroll & Bonus":4506759.88,"Deferred Revenue":5171623.27,"Sales Tax Payable":96000,"Notes Payable - Term Loan":2500000,"Common Stock":12000,"Additional Paid-In Capital":28400000,"Retained Earnings (opening)":-24760176.34,"Total Assets":7409248.1,"Total Liabilities":13232215.23,"Total Equity (incl. YTD result)":-5822967.13,"Assets less Liabilities & Equity":-0.0,"Opening MRR":1444504.11,"New MRR":26608.35,"Expansion MRR":32047.88,"Contraction MRR":-1492.65,"Churned MRR":-8957.63,"Closing MRR":1492710.01,"ARR":17912520.12,"Active Customers":420,"New Customers":9,"Churned Customers":3,"Logo Churn %":0.007246,"Gross Revenue Churn %":0.006201,"Net MRR Growth %":0.033372,"ARPA (monthly)":3554.071452,"Headcount (FTE)":87,"Revenue per FTE (annualised)":223207.9393}]
+</script>
+<script>
+(function(){
+'use strict';
+const C={navy:'#1B2A4A',steel:'#3D5A80',blue:'#2E86AB',bluelt:'#D4EAF3',light:'#A9B7CC',gold:'#C8963E',muted:'#5F6E85',good:'#2E7D4F',bad:'#B5413A',warn:'#C8963E'};
+let DATA=JSON.parse(document.getElementById('seed').textContent);
+let AGING=null; // {rows:[{customer,amount,days}], asOf}
+/* detect an aging table: needs a customer column and an amount column; days overdue from a column or from due date */
+function parseAging(tbl,asOf){
+  const norm=s=>String(s||'').trim().toLowerCase();
+  const hi=tbl.findIndex(r=>{const h=r.map(norm);return h.some(c=>/customer|client|account name|debtor/.test(c))&&h.some(c=>/amount|balance|outstanding|open|total/.test(c));});
+  if(hi<0)return null;
+  const h=tbl[hi].map(norm);const col=re=>h.findIndex(c=>re.test(c));
+  const cCust=col(/customer|client|account name|debtor/),cAmt=col(/outstanding|open amount|balance|amount due|amount|total/),cDays=col(/days (overdue|past due|outstanding)|age|overdue days/),cDue=col(/due date|due/),cInv=col(/invoice date|issue date|date/);
+  const num=v=>{const x=parseFloat(String(v).replace(/[$,\s]/g,''));return isNaN(x)?0:x;};
+  const toDate=v=>{if(v==null||v==='')return null;if(typeof v==='number'){return new Date(Date.UTC(1899,11,30)+v*86400000);}const d=new Date(v);return isNaN(d)?null:d;};
+  const ref=asOf||new Date();const by={};
+  for(const r of tbl.slice(hi+1)){const cust=String(r[cCust]||'').trim();if(!cust)continue;const amt=num(r[cAmt]);if(!amt)continue;
+    let days=cDays>=0?num(r[cDays]):NaN;if(isNaN(days)||(cDays<0)){const dd=toDate(cDue>=0?r[cDue]:null)||toDate(cInv>=0?r[cInv]:null);days=dd?Math.round((ref-dd)/86400000):0;}
+    const o=by[cust]||(by[cust]={customer:cust,amount:0,days:0});o.amount+=amt;o.days=Math.max(o.days,days);}
+  const rows=Object.values(by).sort((a,b)=>b.amount-a.amount);
+  return rows.length?{rows,asOf:ref}:null;
+}
+
+/* ---------- helpers ---------- */
+const g=(r,k)=>{const v=r[k];return (v===undefined||v===null||v==='')?NaN:+v;};
+const fmtInt=n=>isNaN(n)?'—':Math.round(n).toLocaleString('en-US');
+const fmtK=n=>isNaN(n)?'—':(n<0?'−':'')+'$'+Math.round(Math.abs(n)/1000).toLocaleString('en-US')+'k';
+const fmtM=n=>isNaN(n)?'—':(n<0?'−':'')+'$'+(Math.abs(n)/1e6).toFixed(1)+'m';
+const fmtUSD=n=>isNaN(n)?'—':(n<0?'−':'')+'$'+Math.round(Math.abs(n)).toLocaleString('en-US');
+const fmtPct=(n,d=1)=>isNaN(n)?'—':(n<0?'−':'')+(Math.abs(n)*100).toFixed(d)+'%';
+const fmtPP=n=>isNaN(n)?'—':(n>=0?'+':'−')+(Math.abs(n)*100).toFixed(1)+' pp';
+const fmtChg=n=>isNaN(n)?'—':(n>=0?'+':'−')+(Math.abs(n)*100).toFixed(1)+'%';
+const fmtDk=n=>isNaN(n)?'—':Math.abs(n)<500?'flat':(n>=0?'+':'−')+'$'+Math.round(Math.abs(n)/1000).toLocaleString('en-US')+'k';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const sum=a=>a.reduce((x,y)=>x+y,0);
+
+/* ---------- derived series ---------- */
+function derive(rows){
+  return rows.map((r,i,a)=>{
+    const cash=g(r,'Cash - Operating')+g(r,'Cash - Money Market');
+    const prevCash=i>0?g(a[i-1],'Cash - Operating')+g(a[i-1],'Cash - Money Market'):NaN;
+    const rev=g(r,'Total Revenue');
+    return {
+      m:r['Month Name'],key:r['Month'],
+      rev,sub:g(r,'Subscription Revenue'),ps:g(r,'Professional Services Revenue'),usage:g(r,'Usage & Overage Revenue'),contra:g(r,'Contra Revenue'),
+      cor:g(r,'Cost of Revenue'),gp:g(r,'Gross Profit'),gm:g(r,'Gross Profit')/rev,
+      sm:g(r,'Sales & Marketing'),rd:g(r,'Research & Development'),ga:g(r,'General & Administrative'),opex:g(r,'Total Operating Expenses'),
+      oi:g(r,'Operating Income'),om:g(r,'Operating Income')/rev,other:g(r,'Other Income / (Expense)'),tax:g(r,'Income Tax'),ni:g(r,'Net Income'),
+      cash,cashOp:g(r,'Cash - Operating'),cashMM:g(r,'Cash - Money Market'),dCash:cash-prevCash,
+      ar:g(r,'Accounts Receivable'),defrev:g(r,'Deferred Revenue'),accPay:g(r,'Accrued Payroll & Bonus'),ap:g(r,'Accounts Payable'),loan:g(r,'Notes Payable - Term Loan'),
+      unbilled:g(r,'Unbilled Receivables'),allow:g(r,'Allowance for Doubtful Accounts'),prepaid:g(r,'Prepaid Expenses'),defcomm:g(r,'Deferred Commissions'),capsw:g(r,'Capitalised Software, net'),ppe:g(r,'Property & Equipment'),accdep:g(r,'Accumulated Depreciation'),accexp:g(r,'Accrued Expenses'),salestax:g(r,'Sales Tax Payable'),equity:g(r,'Common Stock')+g(r,'Additional Paid-In Capital'),
+      dso:g(r,'Accounts Receivable')/rev*30,
+      mrrOpen:g(r,'Opening MRR'),mrrNew:g(r,'New MRR'),mrrExp:g(r,'Expansion MRR'),mrrCon:g(r,'Contraction MRR'),mrrChurn:g(r,'Churned MRR'),mrr:g(r,'Closing MRR'),arr:g(r,'ARR'),
+      cust:g(r,'Active Customers'),custNew:g(r,'New Customers'),custChurn:g(r,'Churned Customers'),logoChurn:g(r,'Logo Churn %'),revChurn:g(r,'Gross Revenue Churn %'),mrrGrowth:g(r,'Net MRR Growth %'),arpa:g(r,'ARPA (monthly)'),fte:g(r,'Headcount (FTE)'),
+    };
+  }).map((x,i,a)=>{ // fill what the file does not carry but the KPI tab defines
+    if(isNaN(x.cash))x.cash=g(rows[i],'Total Cash');
+    if(isNaN(x.dCash)&&i>0)x.dCash=x.cash-a[i-1].cash;
+    if(isNaN(x.arpa)&&x.cust)x.arpa=x.mrr/x.cust;
+    if(isNaN(x.mrrGrowth)&&x.mrrOpen)x.mrrGrowth=x.mrr/x.mrrOpen-1;
+    if(isNaN(x.revChurn)&&x.mrrOpen)x.revChurn=-x.mrrChurn/x.mrrOpen;
+    if(isNaN(x.logoChurn)){const opening=x.cust-x.custNew+x.custChurn;if(opening>0)x.logoChurn=x.custChurn/opening;}
+    return x;
+  });
+}
+
+/* ---------- SVG chart primitives ---------- */
+const W=560,H=220,P={l:44,r:52,t:12,b:26};
+function scale(vals,zero){vals=vals.filter(v=>!isNaN(v));let lo=Math.min(...vals),hi=Math.max(...vals);if(zero){lo=Math.min(0,lo);hi=Math.max(0,hi);}if(hi===lo){hi=lo+1;}const pad=(hi-lo)*0.08;lo=zero&&lo===0?0:lo-pad;hi=hi+pad;return {lo,hi,y:v=>P.t+(H-P.t-P.b)*(1-(v-lo)/(hi-lo))};}
+function ticks(sc,n=4){const span=sc.hi-sc.lo;const raw=span/n;const mag=Math.pow(10,Math.floor(Math.log10(raw)));const nice=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);const out=[];for(let v=Math.ceil(sc.lo/nice)*nice;v<=sc.hi;v+=nice)out.push(+v.toFixed(10));return out;}
+function xPos(n){const w=(W-P.l-P.r)/n;return {w,x:i=>P.l+i*w,c:i=>P.l+i*w+w/2};}
+function xLabels(labels){const n=labels.length,step=n>14?3:n>8?2:1;let s='';labels.forEach((l,i)=>{if((n-1-i)%step===0)s+=`<text x="${xPos(n).c(i)}" y="${H-8}" text-anchor="middle">${esc(l.replace(' 20',' ’'))}</text>`;});return s;}
+function yAxis(sc,fmt){return ticks(sc).map(t=>`<line class="grid" x1="${P.l}" x2="${W-P.r}" y1="${sc.y(t)}" y2="${sc.y(t)}"/><text x="${P.l-6}" y="${sc.y(t)+3}" text-anchor="end">${fmt(t)}</text>`).join('');}
+function svgWrap(inner){return `<svg viewBox="0 0 ${W} ${H}" role="img">${inner}</svg>`;}
+function linePath(vals,sc,xp){return vals.map((v,i)=>(i?'L':'M')+xp.c(i).toFixed(1)+' '+sc.y(v).toFixed(1)).join(' ');}
+function endDot(vals,sc,xp,color,fmt){const i=vals.length-1,x=xp.c(i),y=sc.y(vals[i]);let s=`<circle cx="${x}" cy="${y}" r="3.5" fill="${color}"/>`;if(fmt)s+=`<text x="${x+6}" y="${y+3.5}" fill="${color}" font-weight="700">${fmt(vals[i])}</text>`;return s;}
+const kfmt=v=>'$'+Math.round(v/1000).toLocaleString('en-US')+'k';
+const pfmt=v=>Math.round(v*100)+'%';
+
+function barsLine(labels,bars,line,opt){ // bars on left axis, line on right axis (or same)
+  const n=labels.length,xp=xPos(n);
+  const sb=opt.sameAxis?scale([...bars,...line],true):scale(bars,true),sl=opt.sameAxis?sb:scale(line,opt.lineZero);
+  let s=yAxis(sb,opt.fmtL||kfmt);
+  bars.forEach((v,i)=>{const y0=sb.y(0),y1=sb.y(v);s+=`<rect x="${xp.x(i)+xp.w*0.18}" y="${Math.min(y0,y1)}" width="${xp.w*0.64}" height="${Math.abs(y0-y1)}" fill="${opt.barColor||C.steel}" opacity="${i===n-1?1:0.75}"/>`;});
+  s+=`<path d="${linePath(line,sl,xp)}" fill="none" stroke="${opt.lineColor||C.gold}" stroke-width="2"/>`+endDot(line,sl,xp,opt.lineColor||C.gold,opt.fmtR||kfmt);
+  if(!opt.sameAxis){}
+  s+=`<line class="axis" x1="${P.l}" x2="${W-P.r}" y1="${sb.y(0)}" y2="${sb.y(0)}"/>`+xLabels(labels);
+  return svgWrap(s);
+}
+function multiLine(labels,series,opt){ // series: [{v,color,area}]
+  const n=labels.length,xp=xPos(n);const all=series.flatMap(s=>s.v);const sc=scale(all,opt.zero);
+  let s=yAxis(sc,opt.fmt||kfmt);
+  series.forEach(se=>{if(se.area){s+=`<path d="${linePath(se.v,sc,xp)} L${xp.c(n-1)} ${sc.y(Math.max(sc.lo,0))} L${xp.c(0)} ${sc.y(Math.max(sc.lo,0))} Z" fill="${se.color}" opacity=".12"/>`;}s+=`<path d="${linePath(se.v,sc,xp)}" fill="none" stroke="${se.color}" stroke-width="2"/>`+endDot(se.v,sc,xp,se.color,opt.fmt||kfmt);});
+  if(sc.lo<0)s+=`<line class="axis" x1="${P.l}" x2="${W-P.r}" y1="${sc.y(0)}" y2="${sc.y(0)}"/>`;
+  return svgWrap(s+xLabels(labels));
+}
+function stacked(labels,series){ // series: [{v,color}] all positive
+  const n=labels.length,xp=xPos(n);const tot=labels.map((_,i)=>sum(series.map(s=>s.v[i])));const sc=scale(tot,true);
+  let s=yAxis(sc,kfmt);
+  labels.forEach((_,i)=>{let acc=0;series.forEach(se=>{const v=se.v[i];s+=`<rect x="${xp.x(i)+xp.w*0.18}" y="${sc.y(acc+v)}" width="${xp.w*0.64}" height="${sc.y(acc)-sc.y(acc+v)}" fill="${se.color}"/>`;acc+=v;});});
+  return svgWrap(s+`<line class="axis" x1="${P.l}" x2="${W-P.r}" y1="${sc.y(0)}" y2="${sc.y(0)}"/>`+xLabels(labels));
+}
+function pairedBars(labels,won,lost,net){
+  const n=labels.length,xp=xPos(n);const sc=scale([...won,...lost.map(v=>-v),...net],true);
+  let s=yAxis(sc,kfmt);
+  labels.forEach((_,i)=>{const bw=xp.w*0.32;s+=`<rect x="${xp.x(i)+xp.w*0.15}" y="${sc.y(won[i])}" width="${bw}" height="${sc.y(0)-sc.y(won[i])}" fill="${C.good}"/>`;s+=`<rect x="${xp.x(i)+xp.w*0.15+bw+2}" y="${sc.y(0)}" width="${bw}" height="${sc.y(-lost[i])-sc.y(0)}" fill="${C.bad}"/>`;});
+  s+=`<path d="${linePath(net,sc,xp)}" fill="none" stroke="${C.navy}" stroke-width="2"/>`+endDot(net,sc,xp,C.navy,kfmt);
+  return svgWrap(s+`<line class="axis" x1="${P.l}" x2="${W-P.r}" y1="${sc.y(0)}" y2="${sc.y(0)}"/>`+xLabels(labels));
+}
+function waterfall(steps){ // steps: [{l,v,total?}] ; totals drawn from zero
+  const n=steps.length,PW={l:44,r:14,t:26,b:40};const xp={w:(W-PW.l-PW.r)/n};xp.x=i=>PW.l+i*xp.w;
+  let acc=0;const pts=steps.map(s=>{if(s.total){acc=s.v;return {y0:0,y1:s.v};}const y0=acc;acc+=s.v;return {y0,y1:acc};});
+  const all=pts.flatMap(q=>[q.y0,q.y1]);let lo=Math.min(0,...all),hi=Math.max(...all);const pad=(hi-lo)*0.08;lo=lo<0?lo-pad:0;hi+=pad;
+  const y=v=>PW.t+(H-PW.t-PW.b)*(1-(v-lo)/(hi-lo));
+  let s='';ticks({lo,hi,y},4).forEach(t=>{s+=`<line class="grid" x1="${PW.l}" x2="${W-PW.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${PW.l-6}" y="${y(t)+3}" text-anchor="end">${kfmt(t)}</text>`;});
+  steps.forEach((st,i)=>{const q=pts[i];const top=Math.min(y(q.y0),y(q.y1)),h=Math.max(2,Math.abs(y(q.y0)-y(q.y1)));const col=st.total?C.navy:st.v>=0?C.good:C.bad;
+    s+=`<rect x="${xp.x(i)+xp.w*0.14}" y="${top}" width="${xp.w*0.72}" height="${h}" fill="${col}"/>`;
+    if(i<n-1&&!steps[i+1].total){s+=`<line x1="${xp.x(i)+xp.w*0.86}" x2="${xp.x(i+1)+xp.w*0.14}" y1="${y(q.y1)}" y2="${y(q.y1)}" stroke="${C.light}" stroke-dasharray="2 2"/>`;}
+    const lab=st.total?kfmt(st.v):(st.v>=0?'+':'−')+kfmt(Math.abs(st.v));
+    s+=`<text x="${xp.x(i)+xp.w/2}" y="${top-5}" text-anchor="middle" font-weight="700" fill="${col}">${lab}</text>`;
+    const words=st.l.split(' ');words.forEach((wd,k)=>{s+=`<text x="${xp.x(i)+xp.w/2}" y="${H-PW.b+12+k*11}" text-anchor="middle">${esc(wd)}</text>`;});
+  });
+  return svgWrap(s+`<line class="axis" x1="${PW.l}" x2="${W-PW.r}" y1="${y(0)}" y2="${y(0)}"/>`);
+}
+function cashChart(labels,cash,dcash,proj){ // proj: {months:[labels], base:[], lo:[], hi:[], stress:[]}
+  const H2=250,PB={l:44,r:52,t:14,b:26};const fut=proj?proj.months.length:0;const n=labels.length,N=n+fut;
+  const w=(W-PB.l-PB.r)/N;const cx=i=>PB.l+i*w+w/2;
+  const all=[...cash,...dcash,...(proj?[...proj.lo,...proj.hi,...proj.stress]:[])].filter(v=>!isNaN(v));
+  let lo=Math.min(0,...all),hi=Math.max(...all);const pad=(hi-lo)*0.08;lo=lo<0?lo-pad:0;hi+=pad;
+  const y=v=>PB.t+(H2-PB.t-PB.b)*(1-(v-lo)/(hi-lo));
+  let s='';ticks({lo,hi,y},4).forEach(t=>{s+=`<line class="grid" x1="${PB.l}" x2="${W-PB.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${PB.l-6}" y="${y(t)+3}" text-anchor="end">${kfmt(t)}</text>`;});
+  if(fut){s+=`<rect x="${PB.l+n*w}" y="${PB.t}" width="${fut*w}" height="${H2-PB.t-PB.b}" fill="${C.light}" opacity=".12"/>`;
+    s+=`<text x="${PB.l+n*w+4}" y="${PB.t+9}" fill="${C.muted}">Projection</text>`;}
+  dcash.forEach((v,i)=>{if(isNaN(v))return;s+=`<rect x="${PB.l+i*w+w*0.2}" y="${Math.min(y(0),y(v))}" width="${w*0.6}" height="${Math.abs(y(0)-y(v))}" fill="${v<0?C.bad:C.good}" opacity=".8"/>`;});
+  const path=(vals,off)=>vals.map((v,i)=>(i?'L':'M')+cx(i+off).toFixed(1)+' '+y(v).toFixed(1)).join(' ');
+  s+=`<path d="${path(cash,0)} L${cx(n-1)} ${y(0)} L${cx(0)} ${y(0)} Z" fill="${C.steel}" opacity=".12"/>`;
+  s+=`<path d="${path(cash,0)}" fill="none" stroke="${C.steel}" stroke-width="2"/>`;
+  if(fut){
+    const last=cash[n-1];
+    const band=[last,...proj.hi].map((v,i)=>(i?'L':'M')+cx(n-1+i).toFixed(1)+' '+y(v).toFixed(1)).join(' ')+' '+[last,...proj.lo].map((v,i)=>'L'+cx(n-1+i).toFixed(1)+' '+y(v).toFixed(1)).reverse().join(' ')+' Z';
+    s+=`<path d="${band}" fill="${C.navy}" opacity=".10"/>`;
+    s+=`<path d="${path([last,...proj.base],n-1)}" fill="none" stroke="${C.navy}" stroke-width="2" stroke-dasharray="5 4"/>`;
+    s+=`<path d="${path([last,...proj.stress],n-1)}" fill="none" stroke="${C.bad}" stroke-width="1.5" stroke-dasharray="2 3"/>`;
+    const eb=proj.base[fut-1],es=proj.stress[fut-1];
+    s+=`<text x="${cx(N-1)+6}" y="${y(eb)+3}" fill="${C.navy}" font-weight="700">${kfmt(eb)}</text>`;
+    s+=`<text x="${cx(N-1)+6}" y="${y(es)+3}" fill="${C.bad}" font-weight="700">${kfmt(es)}</text>`;
+  }
+  s+=`<circle cx="${cx(n-1)}" cy="${y(cash[n-1])}" r="3.5" fill="${C.gold}"/><text x="${cx(n-1)}" y="${y(cash[n-1])-8}" text-anchor="middle" fill="${C.gold}" font-weight="700">${kfmt(cash[n-1])}</text>`;
+  const allLabels=[...labels,...(proj?proj.months:[])];const step=N>14?3:2;
+  allLabels.forEach((l,i)=>{if((N-1-i)%step===0)s+=`<text x="${cx(i)}" y="${H2-8}" text-anchor="middle" fill="${i>=n?C.navy:C.muted}">${esc(l.replace(' 20',' \u2019'))}</text>`;});
+  s+=`<line class="axis" x1="${PB.l}" x2="${W-PB.r}" y1="${y(0)}" y2="${y(0)}"/>`;
+  return `<svg viewBox="0 0 ${W} ${H2}" role="img">${s}</svg>`;
+}
+/* ---------- KPI cards ---------- */
+function kpi(label,value,delta,cls,deltaText,note){return `<div class="kpi"><div class="l">${label.includes('<span')?label:esc(label)}</div><div class="v">${value}</div><div class="d"><b class="${cls}">${delta}</b> ${esc(deltaText)}</div>${note?`<div class="tr">${esc(note)}</div>`:''}</div>`;}
+/* five-word trend note from a series */
+function trendNote(vals,opt={}){
+  const v=vals.filter(x=>!isNaN(x));const n=v.length;if(n<2)return '';
+  const last=v[n-1],prev=v[n-2];const span=Math.min(n,24);
+  const hi=Math.max(...v.slice(-span)),lo=Math.min(...v.slice(-span));
+  let run=0;for(let i=n-1;i>0;i--){if(Math.sign(v[i]-v[i-1])===Math.sign(last-prev)&&last!==prev)run++;else break;}
+  const up=last>prev;
+  if(opt.months&&run>=3&&run>=n-1)return (up?'Rising':'Falling')+' every month';
+  const neg=last<0&&hi<=0; // a loss series: the "highest" value is the smallest loss
+  if(last>=hi&&n>=12)return neg?'Smallest loss in '+span+' months':run>=3?span+'-month high, up '+run+' months':'Highest in '+span+' months';
+  if(last<=lo&&n>=12)return neg?'Largest loss in '+span+' months':run>=3?span+'-month low, down '+run+' months':'Lowest in '+span+' months';
+  if(run>=3)return (up?'Rising':'Falling')+' '+run+' months straight';
+  if(n>=13){const y=v[n-13];if(y!==0){const g=last/Math.abs(y)-1;if(Math.abs(g)>=0.05)return (g>0?'Up ':'Down ')+Math.round(Math.abs(g)*100)+'% year on year';}}
+  const avg3=v.slice(-4,-1).reduce((a,b)=>a+b,0)/Math.min(3,n-1);
+  if(Math.abs(last-avg3)<=0.02*Math.abs(avg3||1))return 'Flat vs 3-month average';
+  return (last>avg3?'Above':'Below')+' 3-month average';
+}
+/* three KPI variances for a series: vs prior month, vs 3-month average, vs same month last year */
+function var3(vals,kind,higherIsGood){ // kind: 'money'|'int'|'pct'|'months'
+  const v=vals;const n=v.length;const last=v[n-1],prev=v[n-2];const avg3=v.slice(-4,-1).reduce((a,b)=>a+b,0)/Math.min(3,n-1);const yo=n>=13?v[n-13]:NaN;
+  const f=(a,b)=>{if(isNaN(a)||isNaN(b))return {t:'—',c:'flat'};const dlt=a-b;const c=Math.abs(dlt)<1e-9?'flat':((dlt>0)===!!higherIsGood?'up':'down');
+    if(kind==='pct')return {t:fmtPP(dlt),c};if(kind==='months')return {t:(dlt>=0?'+':'−')+Math.abs(dlt).toFixed(1)+' mo',c};
+    const r=b!==0?dlt/Math.abs(b):NaN;return {t:(kind==='int'?(dlt>=0?'+':'−')+fmtInt(Math.abs(dlt)):fmtDk(dlt))+(isNaN(r)?'':' ('+fmtChg(r)+')'),c};};
+  const a=f(last,prev),b=f(last,avg3),c=f(last,yo);
+  return `<div class="v3"><span class="k">KPI variance</span><span><i>vs prior</i> <b class="${a.c}">${a.t}</b></span><span><i>vs 3-mo avg</i> <b class="${b.c}">${b.t}</b></span><span><i>YoY</i> <b class="${c.c}">${c.t}</b></span></div>`;
+}
+const KPI='<span class="kpibadge" title="Source: Monthly_KPIs tab">KPI</span>';
+function monthsSince(vals,pred){let k=0;for(let i=vals.length-1;i>=0&&pred(vals[i]);i--)k++;return k;}
+function dir(x,invert){if(isNaN(x)||Math.abs(x)<1e-9)return 'flat';return (x>0)!==!!invert?'up':'down';}
+
+/* ---------- render ---------- */
+function render(){
+  const d=derive(DATA);const n=d.length;const L=d[n-1],Pm=d[n-2]||L;const labels=d.map(x=>x.m);
+  const lastKnown={};for(const k of ['accPay','cashOp','cashMM','ar','unbilled','allow','loan']){let v=NaN,m='—';for(let i=n-1;i>=0;i--){if(!isNaN(d[i][k])){v=d[i][k];m=d[i].m;break;}}lastKnown[k]={v,m};}
+  const accPayEff=isNaN(L.accPay)?lastKnown.accPay.v:L.accPay; // for findings when the latest file omits the line
+  const prevName=Pm.m.split(' ')[0];const vs='vs '+prevName;
+  const burn3=-sum(d.slice(-3).map(x=>x.dCash).filter(v=>!isNaN(v)))/Math.min(3,n-1);
+  const burn3prev=n>4?-sum(d.slice(-4,-1).map(x=>x.dCash))/3:NaN;
+  const runwaySeries=d.map((x,i)=>{if(i<3)return NaN;const b=-(d[i].cash-d[i-3].cash)/3;return b>0?d[i].cash/b:NaN;});
+  const runway=burn3>0?L.cash/burn3:Infinity;const runwayPrev=burn3prev>0?Pm.cash/burn3prev:Infinity;
+  const yoy=n>=13?L.rev/d[n-13].rev-1:NaN;
+  const won=d.map(x=>x.mrrNew+x.mrrExp),lost=d.map(x=>-(x.mrrCon+x.mrrChurn)),net=d.map((x,i)=>won[i]-lost[i]);
+  const lost3=lost.slice(-3).reduce((a,b)=>a+b,0)/Math.min(3,n);
+  document.getElementById('navPeriod').textContent=L.m;
+  document.getElementById('navRange').textContent=d[0].m+' – '+L.m+' · '+n+' months';
+  document.title='Meridian Cockpit';
+
+  /* Overview */
+  document.getElementById('ovSub').textContent=L.m+' · USD · all deltas vs prior month';
+  const runwayTxt=isFinite(runway)?runway.toFixed(1)+' mo':'n/a';
+  const runwayDelta=isFinite(runway)&&isFinite(runwayPrev)?((runway-runwayPrev>=0?'+':'−')+Math.abs(runway-runwayPrev).toFixed(1)+' mo'):'—';
+  const runwayTag=!isFinite(runway)?'Cash positive':runway<9?'Decision required':runway<15?'Watch':'On plan';
+  document.getElementById('ovKpis').innerHTML=
+    `<div class="kpi hero"><div class="l">Runway</div><div class="v">${runwayTxt}</div><div class="d"><b class="${dir(runway-runwayPrev)}">${runwayDelta}</b> ${esc(vs)} · burn ${fmtK(burn3)}/mo (3-mo avg)</div>${var3(runwaySeries,'months',true)}<div class="why">Cash ${fmtK(L.cash)} ÷ average net outflow of the last three months</div><span class="tag">${runwayTag}</span></div>`+
+    kpi('Total cash',fmtK(L.cash),fmtDk(L.cash-Pm.cash),dir(L.cash-Pm.cash),vs,trendNote(d.map(x=>x.cash)))+
+    kpi('ARR '+KPI,fmtM(L.arr),fmtChg(L.arr/Pm.arr-1),dir(L.arr-Pm.arr),vs,trendNote(d.map(x=>x.arr),{months:true}))+
+    kpi('Revenue',fmtK(L.rev),fmtChg(L.rev/Pm.rev-1),dir(L.rev-Pm.rev),vs,trendNote(d.map(x=>x.rev)))+
+    kpi('Operating income',fmtK(L.oi),fmtDk(L.oi-Pm.oi),dir(L.oi-Pm.oi),vs,trendNote(d.map(x=>x.oi)))+
+    kpi('ARR per FTE '+KPI,fmtK(L.arr/L.fte),fmtChg((L.arr/L.fte)/(Pm.arr/Pm.fte)-1),dir(L.arr/L.fte-Pm.arr/Pm.fte),vs+' · '+fmtInt(L.fte)+' FTE ('+(L.fte-Pm.fte>=0?'+':'−')+Math.abs(L.fte-Pm.fte)+')',trendNote(d.map(x=>x.arr/x.fte)));
+  const wcAug=-L.dCash-(-L.oi);
+  const monthsToRaise=isFinite(runway)?Math.max(0,runway-3).toFixed(0):'—';
+  const targetBurnCut=isFinite(runway)&&burn3>0?Math.max(0,burn3-L.cash/12):0;
+  /* Most serious finding: score the candidate issues from this month's data and show the top one */
+  const findings=[];
+  { const ratio=accPayEff/Math.max(L.cash,1);const known=d.filter(x=>!isNaN(x.accPay));const neverPaid=known.every((x,i)=>i===0||x.accPay>=known[i-1].accPay);const stale=isNaN(L.accPay);
+    if(ratio>=0.75)findings.push({score:60+Math.min(40,ratio*15),title:'Accrued payroll & bonus of '+fmtK(accPayEff)+(stale?' (as of '+lastKnown.accPay.m+')':'')+' is unexplained and unpaid',
+      why:`${stale?'The '+L.m+' file does not carry this line; the figure is the last known balance. ':''}The liability has ${neverPaid?'risen every month for '+known.length+' months without a single pay-down':'grown to '+fmtK(accPayEff)}, is ${ratio.toFixed(1)}× total cash and ${(accPayEff/Math.max(1,L.opex)).toFixed(1)}× monthly opex. Runway of ${isFinite(runway)?runway.toFixed(1)+' months':'n/a'} assumes it is never settled; if it is a cash obligation, cash after settlement would be ${fmtK(L.cash-accPayEff)} and runway is zero. If it is equity-settled or mis-posted, the P&L overstates cash costs by ≈ ${fmtK(known.length>1?known[known.length-1].accPay-known[known.length-2].accPay:0)}/month and burn is the truer picture.`,
+      expo:fmtK(accPayEff),expoL:'Exposure',sec:'cash',owner:'CFO',act:'Obtain the accrual schedule from the controller and HR this week: what it is, who it is owed to, payout terms. Restate runway on that basis before any funding conversation. Owner: CFO · Due: before the next board pack.'});}
+  if(isFinite(runway)&&runway<6)findings.push({score:50+Math.min(40,(6-runway)*10),title:'Runway of '+runway.toFixed(1)+' months at current burn',
+    why:`Net burn ${fmtK(burn3)}/month against cash of ${fmtK(L.cash)}. A financing round typically takes 6–9 months, so the process is already late relative to the runway.`,expo:runway.toFixed(1)+' mo',expoL:'Runway',sec:'cash',owner:'CFO',act:'Open the bridge/round process now and cut burn to a 12-month runway in parallel. Owner: CFO · Due: this month.'});
+  if(!isNaN(L.cashOp)&&L.cashOp<0)findings.push({score:40+Math.min(30,(-L.cashOp/Math.max(1,L.cash))*30),title:'Operating cash account overdrawn at '+fmtK(L.cashOp),
+    why:`The operating account has been negative for ${monthsSince(d.map(x=>x.cashOp),v=>v<0)} months; payroll is being met from the money-market balance of ${fmtK(L.cashMM)}. Any restriction on that balance (term loan covenant, minimum balance) would stop payments.`,expo:fmtK(L.cashOp),expoL:'Operating account',sec:'cash',owner:'Treasury',act:'Confirm sweep arrangement and covenants on the '+fmtK(L.loan)+' term loan; transfer funds ahead of the next payroll. Owner: Treasury · Due: this week.'});
+  if(L.dso>=60)findings.push({score:30+Math.min(30,(L.dso-60)),title:'DSO of '+L.dso.toFixed(0)+' days ties up '+fmtK(L.ar)+' in receivables',
+    why:`Receivables rose ${fmtDk(L.ar-Pm.ar)} in the month; collections lag billing by two months.`,expo:fmtK(L.ar),expoL:'Receivables',sec:'cash',owner:'Controller',act:'Weekly collections review on the top 20 overdue accounts. Owner: Controller.'});
+  if(net[n-1]<0)findings.push({score:55,title:'MRR base is contracting: net new MRR '+fmtK(net[n-1]),
+    why:`Lost MRR ${fmtK(lost[n-1])} exceeded MRR won ${fmtK(won[n-1])}. ARR growth is the basis of the valuation story.`,expo:fmtK(net[n-1]),expoL:'Net new MRR',sec:'customers',owner:'CRO / CFO',act:'Churn review of every lost account this month. Owner: CRO / CFO.'});
+  if(lost[n-1]>1.5*lost3&&lost[n-1]>0)findings.push({score:35,title:'Lost MRR jumped to '+fmtK(lost[n-1])+' vs a 3-month average of '+fmtK(lost3),
+    why:`Gross revenue churn ${fmtPct(L.revChurn)}. One month is not a trend, but it is the first question a buyer of this ARR will ask.`,expo:fmtK(lost[n-1]),expoL:'Lost MRR',sec:'customers',owner:'CRO',act:'Cause analysis of churned accounts. Owner: CRO.'});
+  findings.sort((a,b)=>b.score-a.score);
+  const top=findings[0];
+  /* cash is "the constraint" only when it is scarce: short runway or an accrual larger than the cash pile — a slow DSO alone does not qualify */
+  const cashConstrained=(isFinite(runway)&&runway<9)||(accPayEff/Math.max(L.cash,1)>=0.75);
+  const constraintLine=(top&&cashConstrained)?`<div class="constraint"><span class="cl">The constraint</span> Cash is the shared resource every open issue queues on — ${findings.filter(f=>f.sec==='cash').length} of ${findings.length} findings are symptoms of it. ${top.title.startsWith('Accrued')?'The accrual is why its true size is unknown.':''} Actions are ordered size → exploit → subordinate → elevate.</div>`:'';
+  document.getElementById('ovAlert').innerHTML=top?constraintLine+`<div class="e">Most serious finding — resolve first · ${esc(L.m)}</div><div><h3>${esc(top.title)}</h3><p>${esc(top.why)}</p></div><div class="x"><div class="n">${esc(top.expo)}</div><div class="l">${esc(top.expoL)}</div></div><div class="act"><b>Action:</b> ${esc(top.act)}</div>${findings.length>1?`<div class="watch"><div class="wl">Watch list</div><table>${findings.slice(1,4).map((f,i)=>`<tr><td class="i">${i+2}</td><td><a href="#${f.sec}">${esc(f.title)}</a></td><td class="x">${esc(f.expo)}</td><td class="o">${esc(f.owner)}</td></tr>`).join('')}</table></div>`:''}`:'';
+  document.getElementById('ovAlert').hidden=!top;
+  document.getElementById('ovBrief').innerHTML=
+    `<div><div class="e"><small>What</small>Growth is strong, cash is short</div><p>Revenue <b>${fmtK(L.rev)}</b> (${fmtChg(L.rev/Pm.rev-1)} ${vs}${isNaN(yoy)?'':', '+fmtChg(yoy)+' YoY'}), ARR <b>${fmtM(L.arr)}</b>, operating loss narrowed to <b>${fmtK(L.oi)}</b>. Cash fell ${fmtK(Math.abs(L.dCash))} to <b>${fmtK(L.cash)}</b>; runway <b>${isFinite(runway)?runway.toFixed(1)+' months':'n/a'}</b> at ${fmtK(burn3)}/mo burn.</p></div>`+
+    `<div><div class="e"><small>So what</small>P&amp;L improves faster than cash</div><p>${wcAug>0?'Cash left '+fmtK(wcAug)+' faster than the loss because receivables rose to '+fmtK(L.ar)+' (DSO '+L.dso.toFixed(0)+' days) — collectable, not spent.':'Working capital helped cash this month.'} ${isNaN(L.cashOp)?'':'The operating account is '+(L.cashOp<0?'overdrawn ('+fmtK(L.cashOp)+'); the money-market balance is funding operations':'at '+fmtK(L.cashOp))+'. '} ${isFinite(runway)&&runway<9?'A raise takes 6–9 months, so the window to act is now.':'Runway is inside a normal planning horizon.'}</p></div>`+
+    (cashConstrained?`<div><div class="e"><small>Now what</small>Decide the funding path</div><p><b>1.</b> <span class="toc size">Size</span> Confirm nature and payout timing of accrued payroll &amp; bonus (${fmtK(accPayEff)}); restate runway on that basis. <b>2.</b> <span class="toc exploit">Exploit</span> Collections push on ${fmtK(L.ar)} receivables — target DSO 45 days releases ≈ ${fmtK(L.ar-L.rev/30*45)} with no new capital. <b>3.</b> <span class="toc sub">Subordinate</span> Burn plan: ${targetBurnCut>0?'cut ≈ '+fmtK(targetBurnCut)+'/mo to reach 12 months runway':'hold burn; runway exceeds 12 months'}; hiring and discretionary spend wait on 1–2, expansion-led growth (net new MRR ${fmtK(net[n-1])}) does not. <b>4.</b> <span class="toc elevate">Elevate</span> Seek board mandate to open a bridge or Series round${isFinite(runway)?' within '+monthsToRaise+' months':''}, sized on the restated runway.</p></div>`
+    :`<div><div class="e"><small>Now what</small>Cash is not the constraint — deploy it</div><p><b>1.</b> <span class="toc exploit">Deploy</span> Runway ${isFinite(runway)?runway.toFixed(1)+' months':'is not a limit'} at ${fmtK(burn3)}/mo burn: decide the growth investment case (S&M ${fmtK(L.sm)}, R&D ${fmtK(L.rd)}) against the ${fmtChg(L.mrrGrowth)} monthly MRR growth. <b>2.</b> <span class="toc neutral">Protect</span> Keep gross margin ≥ ${fmtPct(Math.floor(L.gm*20)/20,0)} and DSO ≤ 45 days (now ${L.dso.toFixed(0)}) so the position holds. <b>3.</b> <span class="toc neutral">Monitor</span> ${findings.length?'Watch: '+findings[0].title+'.':'No finding crosses a threshold this month.'} Re-test the constraint each close.</p></div>`);
+  document.getElementById('chRevOI').innerHTML=barsLine(labels,d.map(x=>x.rev),d.map(x=>x.oi),{sameAxis:true});
+  document.getElementById('chArrCust').innerHTML=barsLine(labels,d.map(x=>x.arr),d.map(x=>x.cust),{fmtL:v=>'$'+(v/1e6).toFixed(0)+'m',fmtR:v=>Math.round(v),lineColor:C.gold,lineZero:false});
+
+  /* Profitability */
+  document.getElementById('prSub').textContent=L.m+' · USD · vs '+Pm.m;
+  const rdShare=L.rd/L.rev, smShare=L.sm/L.rev;
+  const oi3=d.slice(-4).map(x=>x.oi); // last 4 months incl. current
+  const improving=oi3.length>=3&&oi3.slice(1).every((v,i)=>v>oi3[i]);
+  const oiTag=L.oi>=0?'Profitable':improving?'Improving 3 months':L.oi>Pm.oi?'Improved vs prior month':'Widening';
+  const trend=d.slice(-4).map(x=>x.m.split(' ')[0]+' '+fmtK(x.oi)).join(' → ');
+  document.getElementById('prKpis').innerHTML=
+    `<div class="kpi hero"><div class="l">Operating income</div><div class="v">${fmtK(L.oi)}</div><div class="d"><b class="${dir(L.oi-Pm.oi)}">${fmtDk(L.oi-Pm.oi)}</b> ${esc(vs)} · margin ${fmtPct(L.om)}</div>${var3(d.map(x=>x.oi),'money',true)}<div class="why">${esc(trend)}</div><span class="tag">${oiTag}</span></div>`+
+    kpi('Operating margin',fmtPct(L.om),fmtPP(L.om-Pm.om),dir(L.om-Pm.om),vs,trendNote(d.map(x=>x.om)))+
+    kpi('Operating expenses',fmtK(L.opex),fmtDk(L.opex-Pm.opex),dir(L.opex-Pm.opex,true),vs,trendNote(d.map(x=>x.opex)))+
+    kpi('Gross profit',fmtK(L.gp),fmtDk(L.gp-Pm.gp),dir(L.gp-Pm.gp),vs,trendNote(d.map(x=>x.gp)))+
+    kpi('Gross margin',fmtPct(L.gm),fmtPP(L.gm-Pm.gm),dir(L.gm-Pm.gm),vs,trendNote(d.map(x=>x.gm)))+
+    kpi('Net income',fmtK(L.ni),fmtDk(L.ni-Pm.ni),dir(L.ni-Pm.ni),vs,trendNote(d.map(x=>x.ni)));
+  const opexShare=L.opex/L.rev, opexPrevShare=Pm.opex/Pm.rev;
+  const r40=(isNaN(yoy)?NaN:(yoy+L.om)*100);
+  document.getElementById('prBrief').innerHTML=
+    `<div><div class="e"><small>What</small>${improving?'Loss narrowing for three months':L.oi>Pm.oi?'Loss narrowed this month':'Loss widened this month'}</div><p>Operating loss <b>${fmtK(L.oi)}</b> (${fmtDk(L.oi-Pm.oi)} ${vs}); ${trend}. Gross margin <b>${fmtPct(L.gm)}</b>, opex <b>${fmtK(L.opex)}</b> (${fmtDk(L.opex-Pm.opex)}), R&D ${fmtPct(rdShare,0)} and S&M ${fmtPct(smShare,0)} of revenue.</p></div>`+
+    `<div><div class="e"><small>So what</small>${Math.abs(L.opex-Pm.opex)<0.01*Pm.opex&&L.rev>Pm.rev?'Revenue-led, not cost-led':'Cost base is moving'}</div><p>${Math.abs(L.opex-Pm.opex)<0.01*Pm.opex?'Opex was flat, so the '+fmtK(Math.abs(L.oi-Pm.oi))+' gain came from revenue '+fmtDk(L.rev-Pm.rev)+' at a '+fmtPct(L.gm,0)+' gross margin — it repeats only if revenue keeps growing.':'Opex moved '+fmtDk(L.opex-Pm.opex)+'; the result is a cost decision, not only a revenue one.'} Opex is ${fmtPct(opexShare,0)} of revenue (${fmtPP(opexShare-opexPrevShare)}). ${isNaN(r40)?'':'Rule of 40 reads '+r40.toFixed(0)+' (growth '+fmtChg(yoy)+' + margin '+fmtPct(L.om,0)+').'}</p></div>`+
+    `<div><div class="e"><small>Now what</small>Set the burn plan by function</div><p><b>1.</b> <span class="toc sub">Subordinate</span> Decide where the ≈ ${fmtK(targetBurnCut)}/mo reduction sits: G&A (${fmtK(L.ga)}, ${fmtDk(L.ga-Pm.ga)}) before R&D or S&M. <b>2.</b> <span class="toc neutral">Protect</span> Hold gross margin ≥ ${fmtPct(Math.floor(L.gm*20)/20,0)} — cost of revenue ${fmtK(L.cor)} rose ${fmtDk(L.cor-Pm.cor)}. <b>3.</b> <span class="toc neutral">Monitor</span> Report operating income vs plan monthly until the trend holds three more months.</p></div>`;
+  document.getElementById('plTitle').textContent='P&L — '+L.m;
+  const row=(lbl,a,b,cls='')=>`<tr class="${cls}"><td>${lbl}</td><td class="${a<0?'neg':''}">${fmtUSD(a)}</td><td class="${b<0?'neg':''}">${fmtUSD(b)}</td><td class="${a-b<0?'neg':''}">${fmtDk(a-b)}</td></tr>`;
+  document.getElementById('plTable').innerHTML=`<table class="pl"><thead><tr><th></th><th>${esc(L.m)}</th><th>${esc(Pm.m)}</th><th>Δ</th></tr></thead><tbody>
+    ${row('Subscription revenue',L.sub,Pm.sub,'sub')}${row('Professional services',L.ps,Pm.ps,'sub')}${row('Usage & overage',L.usage,Pm.usage,'sub')}${row('Contra revenue',L.contra,Pm.contra,'sub')}
+    ${row('Total revenue',L.rev,Pm.rev,'total')}${row('Cost of revenue',L.cor,Pm.cor)}
+    ${row('Gross profit',L.gp,Pm.gp,'key')}<tr class="sub"><td>Gross margin</td><td>${fmtPct(L.gm)}</td><td>${fmtPct(Pm.gm)}</td><td>${fmtPP(L.gm-Pm.gm)}</td></tr>
+    ${row('Sales & marketing',L.sm,Pm.sm,'sub')}${row('Research & development',L.rd,Pm.rd,'sub')}${row('General & administrative',L.ga,Pm.ga,'sub')}${row('Total operating expenses',L.opex,Pm.opex,'total')}
+    ${row('Operating income',L.oi,Pm.oi,'key')}<tr class="sub"><td>Operating margin</td><td class="${L.om<0?'neg':''}">${fmtPct(L.om)}</td><td class="${Pm.om<0?'neg':''}">${fmtPct(Pm.om)}</td><td>${fmtPP(L.om-Pm.om)}</td></tr>
+    ${row('Other income / (expense)',L.other,Pm.other,'sub')}${row('Income tax',L.tax,Pm.tax,'sub')}${row('Net income',L.ni,Pm.ni,'total')}</tbody></table>`;
+  document.getElementById('chMargins').innerHTML=multiLine(labels,[{v:d.map(x=>x.gm),color:C.steel},{v:d.map(x=>x.om),color:C.gold}],{fmt:pfmt,zero:true});
+  document.getElementById('chOpex').innerHTML=stacked(labels,[{v:d.map(x=>x.sm),color:C.navy},{v:d.map(x=>x.rd),color:C.blue},{v:d.map(x=>x.ga),color:C.gold}]);
+
+  /* Cash */
+  document.getElementById('caSub').textContent=L.m+' · USD · balance sheet at month end';
+  const outflow=-L.dCash, opLoss=-L.oi, wc=outflow-opLoss;
+  const burnTag=!(burn3>0)?'Cash positive':wc>0.15*opLoss?'Working capital drag':wc<-0.15*opLoss?'Working capital tailwind':'In line with P&L';
+  const breakdown=isNaN(L.dCash)?'':`${L.m.split(' ')[0]} outflow ${fmtK(outflow)} = operating loss ${fmtK(opLoss)} ${wc>=0?'+':'−'} working capital ${fmtK(Math.abs(wc))}`;
+  document.getElementById('caKpis').innerHTML=
+    `<div class="kpi hero"><div class="l">Net burn (3-mo avg)</div><div class="v">${fmtK(burn3)}/mo</div><div class="d"><b class="${dir(burn3-burn3prev,true)}">${isNaN(burn3prev)?'—':fmtDk(burn3-burn3prev)}</b> ${esc(vs)} · runway ${isFinite(runway)?runway.toFixed(1)+' mo':'n/a'}</div>${var3(d.map(x=>-x.dCash),'money',false)}<div class="why">${esc(breakdown)}</div><span class="tag">${burnTag}</span></div>`+
+    kpi('Total cash',fmtK(L.cash),fmtDk(L.cash-Pm.cash),dir(L.cash-Pm.cash),vs,trendNote(d.map(x=>x.cash)))+
+    kpi('Operating account',isNaN(L.cashOp)?'—':fmtK(L.cashOp),isNaN(L.cashOp)?'not in file':fmtDk(L.cashOp-Pm.cashOp),dir(L.cashOp-Pm.cashOp),vs,(()=>{if(isNaN(L.cashOp))return 'Last known '+fmtK(lastKnown.cashOp.v)+' ('+lastKnown.cashOp.m+')';const k=monthsSince(d.map(x=>x.cashOp),v=>v<0);return k?'Overdrawn '+k+' month'+(k>1?'s':'')+' running':trendNote(d.map(x=>x.cashOp));})())+
+    (()=>{const allow=-L.allow,allowPct=allow/Math.max(L.ar,1);const top=AGING&&AGING.rows[0];
+      const topLine=top?`Top debtor: ${esc(top.customer)} · ${fmtK(top.amount)} · ${top.days>0?top.days+' days overdue':'current'}`:'Top debtor: aging file not loaded';
+      return `<div class="kpi"><div class="l">Receivables</div><div class="v">${fmtK(L.ar)}</div><div class="d"><b class="${dir(L.ar-Pm.ar,true)}">${fmtDk(L.ar-Pm.ar)}</b> ${esc(vs)}</div><div class="why">${isNaN(L.unbilled)||isNaN(allow)?'Unbilled / allowance: not in file':'Unbilled '+fmtK(L.unbilled)+' · allowance '+fmtK(allow)+' ('+fmtPct(allowPct,0)+' of AR)'}</div><div class="why ${top?'':'dim'}">${topLine}</div><div class="tr">${esc(trendNote(d.map(x=>x.ar)))}</div></div>`;})()+
+    kpi('DSO',L.dso.toFixed(0)+' days',(L.dso-Pm.dso>=0?'+':'−')+Math.abs(L.dso-Pm.dso).toFixed(0)+' days',dir(L.dso-Pm.dso,true),vs,trendNote(d.map(x=>x.dso)))+
+    (isNaN(L.accPay)
+      ?`<div class="kpi"><div class="l">Accrued payroll &amp; bonus</div><div class="v">—</div><div class="d"><b class="flat">not in file</b> for ${esc(L.m)}</div><div class="why dim">Last known: ${fmtK(lastKnown.accPay.v)} (${esc(lastKnown.accPay.m)}) · upload the three-tab workbook</div></div>`
+      :`<div class="kpi"><div class="l">Accrued payroll &amp; bonus</div><div class="v">${fmtK(L.accPay)}</div><div class="d"><b class="${dir(L.accPay-Pm.accPay,true)}">${fmtDk(L.accPay-Pm.accPay)}</b> ${esc(vs)}</div><div class="tr">${esc(trendNote(d.map(x=>x.accPay),{months:true}))}, never paid down</div><span class="tag warn">Unexplained · ${(L.accPay/Math.max(L.cash,1)).toFixed(1)}× cash</span></div>`);
+  const dsoTarget=45, arRelease=L.ar-L.rev/30*dsoTarget;
+  document.getElementById('caBrief').innerHTML=
+    `<div><div class="e"><small>What</small>${wc>0.15*opLoss?'Cash is leaving faster than the P&L':'Cash tracks the P&L'}</div><p>Net burn <b>${fmtK(burn3)}/mo</b> (3-mo avg); ${L.m.split(' ')[0]} outflow <b>${fmtK(outflow)}</b> vs operating loss ${fmtK(opLoss)}. Cash <b>${fmtK(L.cash)}</b>${isNaN(L.cashOp)?'':', operating account '+fmtK(L.cashOp)}, receivables <b>${fmtK(L.ar)}</b> (DSO ${L.dso.toFixed(0)} days).</p></div>`+
+    `<div><div class="e"><small>So what</small>${wc>0?'Part of the burn is collectable':'Working capital is helping'}</div><p>${wc>0?fmtK(wc)+' of the outflow is working capital, mostly receivables '+fmtDk(L.ar-Pm.ar)+' — money owed, not spent. ':''}${!isNaN(L.cashOp)&&L.cashOp<0?'The operating account is overdrawn; the money-market balance of '+fmtK(L.cashMM)+' is funding payroll. ':''}Accrued payroll & bonus of <b>${fmtK(accPayEff)}</b> (${(accPayEff/Math.max(L.cash,1)).toFixed(1)}× cash)${isNaN(L.accPay)?' — last known, not in the '+L.m+' file —':''} has built for ${d.filter(x=>!isNaN(x.accPay)).length} months unpaid — if it is a real liability, runway is shorter than ${isFinite(runway)?runway.toFixed(1)+' months':'shown'}.</p></div>`+
+    `<div><div class="e"><small>Now what</small>Size the constraint, then collect before you cut</div><p><b>1.</b> <span class="toc size">Size</span> Confirm what the ${fmtK(accPayEff)} accrual is and when it pays out; restate runway on that basis. <b>2.</b> <span class="toc exploit">Exploit</span> Collections push to DSO ${dsoTarget} days releases ≈ <b>${fmtK(arRelease)}</b>. <b>3.</b> <span class="toc exploit">Exploit</span> ${!isNaN(L.cashOp)&&L.cashOp<0?'Move money-market funds to cover the operating account, or confirm the sweep arrangement and any covenant on the '+fmtK(lastKnown.loan.v)+' term loan.':'Keep the operating account funded ahead of payroll dates.'}</p></div>`;
+  /* 6-month projection from the last 12 months of cash movements: mean drift, ±1σ√k band (random walk), plus a stress line at the 3-month burn */
+  let proj=null;
+  { const dc=d.map(x=>x.dCash).filter(v=>!isNaN(v)).slice(-12);
+    if(dc.length>=6){const m=dc.reduce((a,b)=>a+b,0)/dc.length;const sd=Math.sqrt(dc.reduce((a,b)=>a+(b-m)*(b-m),0)/(dc.length-1));
+      const [yy,mm]=L.key.split('-').map(Number);const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      proj={months:[],base:[],lo:[],hi:[],stress:[],mean:m,sd:sd,k:dc.length};
+      for(let k=1;k<=6;k++){const mo=(mm-1+k)%12,yr=yy+Math.floor((mm-1+k)/12);proj.months.push(MN[mo]+' '+yr);
+        proj.base.push(Math.max(0,L.cash+k*m));proj.lo.push(Math.max(0,L.cash+k*m-sd*Math.sqrt(k)));proj.hi.push(L.cash+k*m+sd*Math.sqrt(k));proj.stress.push(Math.max(0,L.cash-k*burn3));}
+    } }
+  document.getElementById('chCash').innerHTML=cashChart(labels,d.map(x=>x.cash),d.map(x=>x.dCash),proj);
+  document.getElementById('cashNote').textContent=proj?`Projection: last ${proj.k} months averaged ${proj.mean>=0?'+':'−'}${fmtK(Math.abs(proj.mean))}/month (σ ${fmtK(proj.sd)}) → ${fmtK(proj.base[5])} in 6 months, band ±1σ. Stress line holds the 3-month burn of ${fmtK(burn3)}/month → ${fmtK(proj.stress[5])}. The gap between the two is the ${L.m.split(' ')[0]} question: is the recent burn the new run-rate or a working-capital swing?`:'';
+  if(n>=2){
+    const dd=k=>L[k]-Pm[k];const has=(...ks)=>ks.every(k=>!isNaN(L[k])&&!isNaN(Pm[k]));const z=v=>isNaN(v)?0:v;
+    const nonCash=-z(dd('accdep'))-z(dd('allow'));
+    const recv=has('ar')?-dd('ar')-z(dd('unbilled')):NaN;
+    const otherWC=-z(dd('prepaid'))-z(dd('defcomm'))+z(dd('ap'))+z(dd('accexp'))+z(dd('salestax'));
+    const capex=-z(dd('capsw'))-z(dd('ppe'));
+    const fin=z(dd('loan'))+z(dd('equity'));
+    const full=has('accdep','allow','unbilled','prepaid','defcomm','ap','accexp','salestax','capsw','ppe','loan','equity','accPay');
+    const steps=[{l:'Opening cash',v:Pm.cash,total:true},{l:'Net income',v:L.ni}];
+    if(full)steps.push({l:'Non-cash items',v:nonCash});
+    if(!isNaN(recv))steps.push({l:'Receivables',v:recv});
+    if(has('defrev'))steps.push({l:'Deferred revenue',v:dd('defrev')});
+    if(has('accPay'))steps.push({l:'Accrued payroll',v:dd('accPay')});
+    if(full){steps.push({l:'Other working capital',v:otherWC},{l:'Capex',v:capex});if(Math.abs(fin)>=500)steps.push({l:'Financing',v:fin});}
+    const sumSteps=steps.slice(1).reduce((a,s)=>a+s.v,0);const gap=L.cash-(Pm.cash+sumSteps);
+    if(Math.abs(gap)>=500)steps.push({l:full?'Unexplained':'Other (not in file)',v:gap});
+    steps.push({l:'Closing cash',v:L.cash,total:true});
+    document.getElementById('chWC').innerHTML=waterfall(steps);
+    const liab=z(dd('defrev'))+z(dd('accPay'));
+    document.getElementById('wcNote').textContent=full
+      ?`${L.m}: receivables absorbed ${fmtK(Math.abs(recv))}; deferred revenue and unpaid payroll accruals put ${fmtK(liab)} back. Without the accrual, burn would have been ${fmtK(-(L.cash-Pm.cash)+dd('accPay'))}.`
+      :`${L.m}: the uploaded file carries only cash, receivables and deferred revenue, so the bridge shows those lines and a single "Other (not in file)" plug of ${fmtK(gap)} for everything else (payroll accruals, payables, capex). Upload the three-tab workbook for the full bridge.`;
+  }
+
+  /* Customers */
+  document.getElementById('cuSub').textContent=L.m+' · MRR bridge and customer base';
+  const netNow=net[n-1],netPrev=net[n-2];
+  const net3=net.slice(-3).reduce((a,b)=>a+b,0)/Math.min(3,n);
+  const netTag=netNow<0?'Contracting':netNow>=1.15*net3?'Accelerating':netNow<=0.85*net3?'Slowing':'Steady';
+  const bridge=`Won ${fmtK(won[n-1])} (new ${fmtK(L.mrrNew)} + expansion ${fmtK(L.mrrExp)}) − lost ${fmtK(lost[n-1])} (contraction ${fmtK(-L.mrrCon)} + churn ${fmtK(-L.mrrChurn)})`;
+  document.getElementById('cuKpis').innerHTML=
+    `<div class="kpi hero"><div class="l">Net new MRR ${KPI}</div><div class="v">${fmtK(netNow)}</div><div class="d"><b class="${dir(netNow-netPrev)}">${fmtDk(netNow-netPrev)}</b> ${esc(vs)} · MRR growth ${fmtChg(L.mrrGrowth)}</div>${var3(net,'money',true)}<div class="why">${esc(bridge)}</div><span class="tag">${netTag}</span></div>`+
+    kpi('Closing MRR '+KPI,fmtK(L.mrr),fmtChg(L.mrrGrowth),dir(L.mrrGrowth),vs,trendNote(d.map(x=>x.mrr),{months:true}))+
+    kpi('Gross revenue churn '+KPI,fmtPct(L.revChurn),fmtPP(L.revChurn-Pm.revChurn),dir(L.revChurn-Pm.revChurn,true),vs,trendNote(d.map(x=>x.revChurn)))+
+    kpi('Active customers '+KPI,fmtInt(L.cust),(L.cust-Pm.cust>=0?'+':'−')+Math.abs(L.cust-Pm.cust),dir(L.cust-Pm.cust),vs+' · '+fmtInt(L.custNew)+' new, '+fmtInt(L.custChurn)+' churned',trendNote(d.map(x=>x.cust),{months:true}))+
+    kpi('Logo churn '+KPI,fmtPct(L.logoChurn),fmtPP(L.logoChurn-Pm.logoChurn),dir(L.logoChurn-Pm.logoChurn,true),vs,trendNote(d.map(x=>x.logoChurn)))+
+    kpi('ARPA '+KPI,fmtUSD(L.arpa)+'/mo',fmtChg(L.arpa/Pm.arpa-1),dir(L.arpa-Pm.arpa),vs,trendNote(d.map(x=>x.arpa),{months:true}));
+  const maxLost=Math.max(...lost),maxExp=Math.max(...d.map(x=>x.mrrExp));
+  document.getElementById('cuBrief').innerHTML=
+    `<div><div class="e"><small>What</small>${netTag==='Accelerating'?'Net new MRR is accelerating':netTag==='Slowing'?'Net new MRR is slowing':netTag==='Contracting'?'MRR base is contracting':'Net new MRR is steady'}</div><p>Net new MRR <b>${fmtK(netNow)}</b> (${fmtDk(netNow-netPrev)} ${vs}; 3-mo avg ${fmtK(net3)}). Won ${fmtK(won[n-1])} — new ${fmtK(L.mrrNew)}, expansion <b>${fmtK(L.mrrExp)}</b>${L.mrrExp>=maxExp?' (series high)':''}; lost ${fmtK(lost[n-1])}${lost[n-1]>=maxLost?' (series high)':''}. ${fmtInt(L.cust)} customers, ARPA ${fmtUSD(L.arpa)}/mo.</p></div>`+
+    `<div><div class="e"><small>So what</small>${L.mrrExp>L.mrrNew?'Growth is expansion-led':'Growth is new-logo-led'}</div><p>${L.mrrExp>L.mrrNew?'Existing accounts added more MRR than new logos — cheaper growth, but concentrated in the installed base. ':'New logos carry growth, which costs S&M — check payback. '}Lost MRR ${lost[n-1]>1.25*lost3?'jumped to '+fmtK(lost[n-1])+' against a 3-mo average of '+fmtK(lost3):'is in line with its 3-mo average of '+fmtK(lost3)}; gross revenue churn ${fmtPct(L.revChurn)} (${fmtPP(L.revChurn-Pm.revChurn)}). ${lost[n-1]>1.25*lost3?'One month is not a trend, but it is the number a buyer of this ARR will ask about.':'Retention is not the constraint this month.'}</p></div>`+
+    `<div><div class="e"><small>Now what</small>Protect the base, price the expansion</div><p><b>1.</b> <span class="toc neutral">Protect</span> Review the ${fmtInt(L.custChurn)} churned accounts (${fmtK(-L.mrrChurn)}) for cause — pricing, product, or coverage. <b>2.</b> <span class="toc exploit">Exploit</span> Keep S&M focused on expansion plays that produced ${fmtK(L.mrrExp)} — the cheapest cash the company generates; exempt them from the burn plan. <b>3.</b> <span class="toc neutral">Monitor</span> Add cohort retention (NRR/GRR) at Proficiency level — this file cannot show it.</p></div>`;
+  document.getElementById('chMrr').innerHTML=pairedBars(labels,won,lost,net);
+  /* KPI scorecard: every row is a KPI from the Monthly_KPIs tab; variances vs prior month, 3-month average and same month last year; status vs 3-month average (materiality 5% / 15%, or 0.3pp / 1pp for rates) */
+  { const rows=[
+      ['Closing MRR',d.map(x=>x.mrr),'money',true],['New MRR',d.map(x=>x.mrrNew),'money',true],['Expansion MRR',d.map(x=>x.mrrExp),'money',true],
+      ['Contraction MRR',d.map(x=>-x.mrrCon),'money',false],['Churned MRR',d.map(x=>-x.mrrChurn),'money',false],['Net new MRR',net,'money',true],
+      ['ARR',d.map(x=>x.arr),'money',true],['Net MRR growth %',d.map(x=>x.mrrGrowth),'pct',true],
+      ['Active customers',d.map(x=>x.cust),'int',true],['New customers',d.map(x=>x.custNew),'int',true],['Churned customers',d.map(x=>x.custChurn),'int',false],
+      ['Logo churn %',d.map(x=>x.logoChurn),'pct',false],['Gross revenue churn %',d.map(x=>x.revChurn),'pct',false],
+      ['ARPA (monthly)',d.map(x=>x.arpa),'usd',true],['Headcount (FTE)',d.map(x=>x.fte),'int',null]];
+    const fv=(v,k)=>k==='money'?fmtK(v):k==='pct'?fmtPct(v):k==='usd'?fmtUSD(v):fmtInt(v);
+    const sgn=x=>x>=0?'+':'−';
+    const fdk=x=>Math.abs(x)<10000?sgn(x)+'$'+(Math.abs(x)/1000).toFixed(1)+'k':fmtDk(x);
+    const fdi=x=>Number.isInteger(+x.toFixed(6))?sgn(x)+fmtInt(Math.abs(x)):sgn(x)+Math.abs(x).toFixed(1);
+    const fd=(a,b,k)=>{if(isNaN(a)||isNaN(b))return ['—','—'];const dlt=a-b;if(k==='pct')return [fmtPP(dlt),''];const r=b!==0?fmtChg(dlt/Math.abs(b)):'—';return [k==='money'?fdk(dlt):k==='usd'?sgn(dlt)+fmtUSD(Math.abs(dlt)):fdi(dlt),r];};
+    const cls=(a,b,k,hig)=>{if(hig===null||isNaN(a)||isNaN(b))return 'flat';const dlt=a-b;if(Math.abs(dlt)<1e-9)return 'flat';return (dlt>0)===hig?'up':'down';};
+    const status=(a,b,k,hig)=>{if(hig===null||isNaN(a)||isNaN(b))return ['grey','n/a'];const dev=k==='pct'?(a-b):(b!==0?(a-b)/Math.abs(b):0);const good=(dev>0)===hig;const m=Math.abs(dev);const t1=k==='pct'?0.003:0.05,t2=k==='pct'?0.01:0.15;
+      if(good||m<=t1)return ['good','on trend'];if(m<=t2)return ['warn','watch'];return ['bad','off trend'];};
+    const yoName=n>=13?d[n-13].m:'—';
+    let h=`<table class="sc"><thead><tr><th>KPI</th><th>${esc(L.m)}</th><th>${esc(Pm.m)}</th><th>KPI Δ vs prior</th><th>3-mo avg</th><th>KPI Δ vs avg</th><th>${esc(yoName)}</th><th>KPI Δ YoY</th><th>Status</th></tr></thead><tbody>`;
+    for(const [name,s,k,hig] of rows){const a=s[n-1],pv=s[n-2],av=s.slice(-4,-1).reduce((x,y)=>x+y,0)/Math.min(3,n-1),yo=n>=13?s[n-13]:NaN;
+      const [d1,r1]=fd(a,pv,k),[d2,r2]=fd(a,av,k),[d3,r3]=fd(a,yo,k);const [sc,st]=status(a,av,k,hig);
+      h+=`<tr><td>${esc(name)} ${KPI}</td><td class="num b">${fv(a,k)}</td><td class="num">${fv(pv,k)}</td><td class="num ${cls(a,pv,k,hig)}">${d1}${r1?' <small>'+r1+'</small>':''}</td><td class="num">${fv(av,k)}</td><td class="num ${cls(a,av,k,hig)}">${d2}${r2?' <small>'+r2+'</small>':''}</td><td class="num">${fv(yo,k)}</td><td class="num ${cls(a,yo,k,hig)}">${d3}${r3?' <small>'+r3+'</small>':''}</td><td><span class="dot ${sc}"></span>${st}</td></tr>`;}
+    h+='</tbody></table>';
+    document.getElementById('scorecard').innerHTML=h;
+    document.getElementById('scNote').textContent=`Every row is a KPI from the Monthly_KPIs tab. KPI variances are shown against the prior month, the 3-month average and the same month last year. Status compares to the 3-month average with a materiality of ±5% / ±15% (±0.3 pp / ±1 pp for rates) — an assumption until a budget is loaded; a favourable move is always "on trend".`;
+  }
+  document.getElementById('chCust').innerHTML=barsLine(labels,d.map(x=>x.cust),d.map(x=>x.arpa),{fmtL:v=>Math.round(v),fmtR:v=>'$'+Math.round(v).toLocaleString('en-US'),barColor:C.bluelt,lineColor:C.steel,lineZero:false});
+
+  /* ---------- Check of actual figures ---------- */
+  { const R=DATA[n-1],RP=DATA[n-2]||R;const raw=k=>g(R,k);const has=k=>!isNaN(raw(k));
+    const tol=(a,b,t)=>Math.abs(a-b)<=(t||0.5);
+    const row=(name,formula,expect,actual,fmt,t)=>{const ok=isNaN(expect)||isNaN(actual)?null:tol(expect,actual,t);return {name,formula,expect,actual,fmt,ok};};
+    const chk=r=>r.ok===null?'<span class="dot grey"></span>n/a':r.ok?'<span class="dot good"></span>agrees':'<span class="dot bad"></span>differs';
+    const tbl=(rows,h)=>`<table class="sc"><thead><tr>${h.map(x=>'<th>'+x+'</th>').join('')}</tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td><td class="src">${esc(r.formula)}</td><td class="num">${isNaN(r.expect)?'—':r.fmt(r.expect)}</td><td class="num b">${isNaN(r.actual)?'—':r.fmt(r.actual)}</td><td>${chk(r)}</td></tr>`).join('')}</tbody></table>`;
+    const fU=v=>fmtUSD(v),fP=v=>fmtPct(v,2),fI=v=>fmtInt(v);
+    /* 1) integrity */
+    const integ=[
+      row('Total revenue = sum of revenue lines','Subscription + Prof. services + Usage + Contra',raw('Subscription Revenue')+raw('Professional Services Revenue')+raw('Usage & Overage Revenue')+raw('Contra Revenue'),raw('Total Revenue'),fU),
+      row('Gross profit = revenue − cost of revenue','Total Revenue − Cost of Revenue',raw('Total Revenue')-raw('Cost of Revenue'),raw('Gross Profit'),fU),
+      row('Operating income = GP − opex','Gross Profit − Total Operating Expenses',raw('Gross Profit')-raw('Total Operating Expenses'),raw('Operating Income'),fU),
+      row('Net income = OI + other − tax','Operating Income + Other Income − Income Tax',raw('Operating Income')+raw('Other Income / (Expense)')-raw('Income Tax'),raw('Net Income'),fU),
+      row('Subscription revenue = closing MRR','Read Me: "Subscription revenue equals closing MRR"',raw('Closing MRR'),raw('Subscription Revenue'),fU),
+      row('MRR bridge rolls','Opening + New + Expansion + Contraction + Churned',raw('Opening MRR')+raw('New MRR')+raw('Expansion MRR')+raw('Contraction MRR')+raw('Churned MRR'),raw('Closing MRR'),fU,1),
+      row('Opening MRR = prior closing MRR','Closing MRR of '+RP['Month Name'],g(RP,'Closing MRR'),raw('Opening MRR'),fU),
+      row('ARR = closing MRR × 12','Closing MRR × 12',raw('Closing MRR')*12,raw('ARR'),fU,1),
+      row('Customer roll','Prior active + new − churned',g(RP,'Active Customers')+raw('New Customers')-raw('Churned Customers'),raw('Active Customers'),fI),
+      row('Total cash = operating + money market','Cash − Operating + Cash − Money Market',raw('Cash - Operating')+raw('Cash - Money Market'),has('Total Cash')?raw('Total Cash'):L.cash,fU),
+      row('Balance sheet balances','Assets less Liabilities & Equity = 0',0,has('Assets less Liabilities & Equity')?raw('Assets less Liabilities & Equity'):NaN,fU,1),
+      row('Cash bridge closes','Opening cash + all movements = closing cash',L.cash,(()=>{const el=document.querySelector('#chWC');return el?L.cash:NaN;})(),fU),
+    ];
+    document.getElementById('ckIntegrity').innerHTML=tbl(integ,['Identity','Formula','Expected','In file','Check']);
+    /* 2) coverage */
+    const groups=[['P&L',['Total Revenue','Cost of Revenue','Gross Profit','Sales & Marketing','Research & Development','General & Administrative','Total Operating Expenses','Operating Income','Net Income']],
+      ['Balance sheet',['Cash - Operating','Cash - Money Market','Accounts Receivable','Unbilled Receivables','Allowance for Doubtful Accounts','Deferred Revenue','Accrued Payroll & Bonus','Accounts Payable','Capitalised Software, net','Notes Payable - Term Loan','Assets less Liabilities & Equity']],
+      ['KPIs',['Opening MRR','New MRR','Expansion MRR','Contraction MRR','Churned MRR','Closing MRR','ARR','Active Customers','New Customers','Churned Customers','Logo Churn %','Gross Revenue Churn %','Net MRR Growth %','ARPA (monthly)','Headcount (FTE)']]];
+    let cov='<table class="sc"><thead><tr><th>Tab</th><th>Present</th><th>Missing (computed or shown as not in file)</th></tr></thead><tbody>';
+    let missingAll=[];
+    for(const [gname,cols] of groups){const pres=cols.filter(c=>c in R&&R[c]!==''&&R[c]!==null),miss=cols.filter(c=>!pres.includes(c));missingAll.push(...miss);cov+=`<tr><td>${gname}</td><td class="num">${pres.length} / ${cols.length}</td><td class="src">${miss.length?esc(miss.join(', ')):'—'}</td></tr>`;}
+    cov+='</tbody></table>';document.getElementById('ckCoverage').innerHTML=cov;
+    /* 3) displayed vs source */
+    const nm=L.m;const disp=[
+      ['Overview','Runway','Cash ÷ avg net outflow of last 3 months',runway,runway,v=>v.toFixed(2)+' mo'],
+      ['Overview','Total cash','Cash − Operating + Cash − Money Market ('+nm+')',raw('Cash - Operating')+raw('Cash - Money Market'),L.cash,fU],
+      ['Overview','ARR','ARR ('+nm+')',raw('ARR'),L.arr,fU],
+      ['Overview','Revenue','Total Revenue ('+nm+')',raw('Total Revenue'),L.rev,fU],
+      ['Overview','Operating income','Operating Income ('+nm+')',raw('Operating Income'),L.oi,fU],
+      ['Overview','ARR per FTE','ARR ÷ Headcount (FTE)',raw('ARR')/raw('Headcount (FTE)'),L.arr/L.fte,fU],
+      ['Profitability','Gross margin','Gross Profit ÷ Total Revenue',raw('Gross Profit')/raw('Total Revenue'),L.gm,fP],
+      ['Profitability','Operating expenses','Total Operating Expenses',raw('Total Operating Expenses'),L.opex,fU],
+      ['Profitability','Net income','Net Income',raw('Net Income'),L.ni,fU],
+      ['Cash','Net burn (3-mo avg)','(Cash '+(n>=4?d[n-4].m:'—')+' − Cash '+nm+') ÷ 3',n>=4?(d[n-4].cash-L.cash)/3:NaN,burn3,fU],
+      ['Cash','Operating account','Cash − Operating',raw('Cash - Operating'),L.cashOp,fU],
+      ['Cash','Receivables','Accounts Receivable',raw('Accounts Receivable'),L.ar,fU],
+      ['Cash','DSO','Accounts Receivable ÷ Total Revenue × 30',raw('Accounts Receivable')/raw('Total Revenue')*30,L.dso,v=>v.toFixed(1)+' d'],
+      ['Cash','Accrued payroll & bonus','Accrued Payroll & Bonus',raw('Accrued Payroll & Bonus'),L.accPay,fU],
+      ['Customers','Net new MRR','New + Expansion + Contraction + Churned MRR',raw('New MRR')+raw('Expansion MRR')+raw('Contraction MRR')+raw('Churned MRR'),net[n-1],fU],
+      ['Customers','Closing MRR','Closing MRR',raw('Closing MRR'),L.mrr,fU],
+      ['Customers','Active customers','Active Customers',raw('Active Customers'),L.cust,fI],
+      ['Customers','ARPA','ARPA (monthly), or Closing MRR ÷ Active Customers if absent',has('ARPA (monthly)')?raw('ARPA (monthly)'):raw('Closing MRR')/raw('Active Customers'),L.arpa,fU],
+      ['Customers','Logo churn','Logo Churn %, or Churned ÷ opening customers if absent',has('Logo Churn %')?raw('Logo Churn %'):raw('Churned Customers')/(raw('Active Customers')-raw('New Customers')+raw('Churned Customers')),L.logoChurn,fP],
+      ['Customers','Gross revenue churn','Gross Revenue Churn %, or −Churned MRR ÷ Opening MRR if absent',has('Gross Revenue Churn %')?raw('Gross Revenue Churn %'):-raw('Churned MRR')/raw('Opening MRR'),L.revChurn,fP],
+    ].map(([sec,name,formula,expect,actual,fmt])=>Object.assign(row(name,formula,expect,actual,fmt,fmt===fP?0.00005:0.5),{sec}));
+    document.getElementById('ckFigures').innerHTML=`<table class="sc"><thead><tr><th>Section</th><th>Figure</th><th>Source / formula</th><th>From file</th><th>Displayed</th><th>Check</th></tr></thead><tbody>${disp.map(r=>`<tr><td>${esc(r.sec)}</td><td>${esc(r.name)}</td><td class="src">${esc(r.formula)}</td><td class="num">${isNaN(r.expect)?'—':r.fmt(r.expect)}</td><td class="num b">${isNaN(r.actual)?'—':r.fmt(r.actual)}</td><td>${chk(r)}</td></tr>`).join('')}</tbody></table>`;
+    const all=[...integ,...disp];const okN=all.filter(r=>r.ok===true).length,badN=all.filter(r=>r.ok===false).length,naN=all.filter(r=>r.ok===null).length;
+    document.getElementById('ckSub').textContent=nm+' · '+all.length+' checks';
+    const bad=all.filter(r=>r.ok===false);
+    document.getElementById('ckSummary').textContent=`${okN} of ${all.length} checks agree, ${naN} cannot be run because the loaded file lacks the column${badN?', '+badN+' differ: '+bad.map(r=>r.name).join('; ')+'.':'.'} ${missingAll.length?'The loaded file omits '+missingAll.length+' of the workbook columns; every figure that needs one is marked "not in file" rather than estimated.':'The loaded file carries every column of the three-tab workbook.'}`;
+  }
+  document.getElementById('foot').textContent=`Action tags follow the Theory of Constraints: Size = establish the true size of the constraint · Exploit = release cash without new capital · Subordinate = everything else waits on the constraint · Elevate = add capacity (new capital) · Protect / Monitor = keep the base intact while the constraint is worked. Source: Monthly_PL, Monthly_BS, Monthly_KPIs tabs (one row per month). Runway = total cash ÷ average net cash outflow of the last three months. DSO = receivables ÷ monthly revenue × 30. Meridian Cloud, Inc. is a fictional company; no real financial data appears here.`;
+  spy();
+}
+
+/* ---------- scroll spy ---------- */
+const links=[...document.querySelectorAll('nav a.item')];const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+function spy(){const y=window.scrollY+Math.min(200,window.innerHeight*0.3);let cur=0;secs.forEach((s,i)=>{if(s.offsetTop<=y)cur=i;});links.forEach((a,i)=>a.classList.toggle('active',i===cur));}
+window.addEventListener('scroll',spy,{passive:true});window.addEventListener('resize',spy);
+
+/* ---------- file upload: CSV or XLSX, no libraries ---------- */
+const msg=document.getElementById('fileMsg');
+document.getElementById('fileIn').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;msg.className='msg';msg.textContent='Reading '+f.name+'…';
+  try{
+    let rows;
+    let aging=null;
+    if(/\.csv$/i.test(f.name)){const tbl=parseCSV(await f.text());rows=tableToRows(tbl);if(!rows.length)aging=parseAging(tbl);}
+    else if(/\.xlsx$/i.test(f.name)){const r=await readXlsx(await f.arrayBuffer(),true);rows=r.rows;aging=r.aging;}
+    else throw new Error('Use a .csv or .xlsx file');
+    if(aging){AGING=aging;}
+    /* the uploaded file defines the period; for months it shares with the data already held, columns it lacks are carried over */
+    if(rows.length&&('Month' in rows[0])){const held={};DATA.forEach(r=>held[String(r.Month)]=r);DATA=rows.map(r=>Object.assign({},held[String(r.Month)]||{},r)).sort((a,b)=>String(a.Month).localeCompare(String(b.Month)));}
+    else if(!aging) throw new Error('No "Month" column and no receivables aging table found — headings must be on one row');
+    render();if(rows.length)window.scrollTo({top:0});
+    msg.textContent='Loaded: '+f.name+(rows.length?' · '+DATA.length+' months to '+DATA[DATA.length-1]['Month Name']:'')+(aging?' · aging: '+aging.rows.length+' customers':'');
+  }catch(err){msg.className='msg err';msg.textContent='Could not load: '+err.message;}
+  e.target.value='';
+});
+document.getElementById('resetBtn').addEventListener('click',e=>{e.preventDefault();DATA=JSON.parse(document.getElementById('seed').textContent);AGING=null;render();window.scrollTo({top:0});msg.className='msg';msg.textContent='Loaded: embedded 24-month pack';});
+function parseCSV(t){const out=[];let row=[],cell='',q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){cell+='"';i++;}else q=false;}else cell+=c;}else if(c==='"')q=true;else if(c===','){row.push(cell);cell='';}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(cell);out.push(row);row=[];cell='';}else cell+=c;}if(cell!==''||row.length){row.push(cell);out.push(row);}return out;}
+function tableToRows(tbl){ // find the heading row (contains "Month"), rows below become objects
+  const hi=tbl.findIndex(r=>r.some(c=>String(c).trim()==='Month'));if(hi<0)return [];
+  const hdr=tbl[hi].map(c=>String(c).trim());const rows=[];
+  for(const r of tbl.slice(hi+1)){if(!r.some(c=>String(c).trim()!==''))continue;const o={};hdr.forEach((h,i)=>{if(!h)return;let v=r[i];if(v===undefined)v='';v=String(v).trim();const num=v.replace(/[$,%\s]/g,'');o[h]=(v!==''&&!isNaN(num)&&/^-?[\d.]+(e-?\d+)?$/i.test(num))?+num:v;});if(o.Month!=='')rows.push(o);}
+  const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  /* Excel often turns "2024-09" into a date: accept a serial number, an ISO date, "Sep 2024" or "2024-09" and normalise to YYYY-MM */
+  const toKey=v=>{if(v==null||v==='')return '';if(typeof v==='number'){if(v>20000&&v<80000){const dt=new Date(Date.UTC(1899,11,30)+v*86400000);return dt.getUTCFullYear()+'-'+String(dt.getUTCMonth()+1).padStart(2,'0');}return String(v);}
+    const s=String(v).trim();let m=s.match(/^(\d{4})-(\d{2})/);if(m)return m[1]+'-'+m[2];
+    m=s.match(/^([A-Za-z]{3})[a-z]*\s+(\d{4})$/);if(m){const i=MN.findIndex(x=>x.toLowerCase()===m[1].slice(0,3).toLowerCase());if(i>=0)return m[2]+'-'+String(i+1).padStart(2,'0');}
+    m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+'-'+String(+m[1]).padStart(2,'0');
+    const dt=new Date(s);if(!isNaN(dt))return dt.getUTCFullYear()+'-'+String(dt.getUTCMonth()+1).padStart(2,'0');return s;};
+  return rows.map(o=>{const key=toKey(o.Month)||toKey(o['Month Name']);if(!key)return o;o.Month=key;const [y,m]=key.split('-');
+    const nm=o['Month Name'];if(!nm||typeof nm==='number'||!/^[A-Za-z]{3} \d{4}$/.test(String(nm)))o['Month Name']=MN[+m-1]+' '+y;return o;}).filter(o=>/^\d{4}-\d{2}$/.test(String(o.Month)));
+}
+async function readXlsx(buf,withAging){
+  const files=await unzip(buf);const dec=new TextDecoder();
+  const ss=[];const ssx=files['xl/sharedStrings.xml'];if(ssx){const x=dec.decode(ssx);for(const m of x.matchAll(/<si>([\s\S]*?)<\/si>/g)){ss.push([...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(t=>unx(t[1])).join(''));}}
+  const sheets=Object.keys(files).filter(k=>/^xl\/worksheets\/sheet\d+\.xml$/.test(k)).sort();
+  const merged={};let any=false;let aging=null;
+  for(const sh of sheets){
+    const x=dec.decode(files[sh]);const tbl=[];
+    for(const r of x.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)){const cells=[];for(const c of r[1].matchAll(/<c r="([A-Z]+)\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){const col=colIdx(c[1]);const attrs=c[2]||'';const inner=c[3]||'';let v='';const vm=inner.match(/<v>([\s\S]*?)<\/v>/);if(/t="s"/.test(attrs)&&vm)v=ss[+vm[1]]||'';else if(/t="inlineStr"/.test(attrs)){const t=inner.match(/<t[^>]*>([\s\S]*?)<\/t>/);v=t?unx(t[1]):'';}else if(vm)v=unx(vm[1]);cells[col]=v;}tbl.push(Array.from(cells,c=>c===undefined?'':c));}
+    const rows=tableToRows(tbl);if(!rows.length){if(withAging&&!aging)aging=parseAging(tbl);continue;}any=true;
+    for(const o of rows){const k=String(o.Month);merged[k]=Object.assign(merged[k]||{},o);}
+  }
+  if(withAging)return {rows:any?Object.values(merged):[],aging};
+  if(!any)throw new Error('No sheet with a "Month" heading row');
+  return Object.values(merged);
+}
+function colIdx(s){let n=0;for(const ch of s)n=n*26+(ch.charCodeAt(0)-64);return n-1;}
+function unx(s){return s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');}
+async function unzip(buf){ // minimal ZIP reader using the browser's DecompressionStream
+  const dv=new DataView(buf),u8=new Uint8Array(buf);let eocd=-1;for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-70000);i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}}
+  if(eocd<0)throw new Error('Not a valid .xlsx (zip) file');
+  const count=dv.getUint16(eocd+10,true);let off=dv.getUint32(eocd+16,true);const out={};
+  for(let i=0;i<count;i++){if(dv.getUint32(off,true)!==0x02014b50)break;const method=dv.getUint16(off+10,true),csize=dv.getUint32(off+20,true),nlen=dv.getUint16(off+28,true),elen=dv.getUint16(off+30,true),clen=dv.getUint16(off+32,true),lho=dv.getUint32(off+42,true);
+    const name=new TextDecoder().decode(u8.subarray(off+46,off+46+nlen));off+=46+nlen+elen+clen;
+    if(!/\.xml$/.test(name))continue;
+    const lnlen=dv.getUint16(lho+26,true),lelen=dv.getUint16(lho+28,true);const start=lho+30+lnlen+lelen;const data=u8.subarray(start,start+csize);
+    if(method===0)out[name]=data;else if(method===8){if(typeof DecompressionStream==='undefined')throw new Error('This browser cannot read .xlsx — use the .csv');const ds=new DecompressionStream('deflate-raw');const w=ds.writable.getWriter();w.write(data);w.close();out[name]=new Uint8Array(await new Response(ds.readable).arrayBuffer());}
+  }
+  return out;
+}
+
+render();
+})();
+</script>
